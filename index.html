@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2F4A34">
+<title>PGAgro — Chequeos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --ink:#1F2A22;
+    --green:#2F4A34;
+    --sage:#6B8F6E;
+    --amber:#E4BE7A;
+    --paper:#F2F0E4;
+    --bg:#FBFAF6;
+    --ok:#4C7156;
+    --warn:#C98A2E;
+    --bad:#B4442E;
+    --line:#E3E0D3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Poppins', 'Helvetica Neue', Arial, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-bottom:78px;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:var(--green);
+    color:var(--paper);
+    padding:16px 18px 14px;
+    display:flex; align-items:center; gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);
+  }
+  header .icon{width:34px; height:34px; flex:0 0 auto;}
+  header .brand{display:flex; flex-direction:column; line-height:1.05;}
+  header .brand b{font-weight:800; font-size:19px;}
+  header .brand span{font-weight:500; font-size:12px; color:var(--amber); letter-spacing:.4px;}
+  header .today{margin-left:auto; text-align:right; font-size:11px; color:var(--paper); opacity:.85;}
+
+  /* ---------- Views ---------- */
+  main{flex:1; padding:16px 16px 8px;}
+  .view{display:none; animation:fade .18s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h1.page-title{font-size:15px; font-weight:700; margin:4px 0 14px; color:var(--green); letter-spacing:.2px;}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--paper);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:12px;
+    border:1px solid var(--line);
+  }
+  .card-row{display:flex; align-items:center; gap:12px;}
+  .card-row .dot{width:11px; height:11px; border-radius:50%; flex:0 0 auto;}
+  .dot.ok{background:var(--ok);}
+  .dot.warn{background:var(--warn);}
+  .dot.bad{background:var(--bad);}
+  .dot.grey{background:#B9B6A8;}
+  .card-title{font-weight:700; font-size:15px; color:var(--ink);}
+  .card-sub{font-size:12.5px; color:#5B5748; margin-top:2px;}
+  .card-meta{font-size:11.5px; color:#8A8672; margin-top:6px;}
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    border-radius:12px; font-family:inherit; font-weight:600; font-size:13.5px;
+    padding:11px 16px; letter-spacing:.2px;
+    transition:transform .05s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--green); color:var(--paper); width:100%;}
+  .btn-outline{background:transparent; color:var(--green); border:1.5px solid var(--green); width:100%;}
+  .btn-amber{background:var(--amber); color:var(--ink); width:100%;}
+  .btn-small{padding:8px 12px; font-size:12.5px; border-radius:10px;}
+  .btn-block{display:block; width:100%; margin-top:10px;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  /* ---------- Equipment tiles (Chequeos tab) ---------- */
+  .tile{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px;
+    padding:16px; margin-bottom:12px; display:flex; align-items:center; gap:14px;
+    cursor:pointer;
+  }
+  .tile .tile-ico{
+    width:44px; height:44px; border-radius:12px; background:var(--green);
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+    color:var(--amber); font-size:20px;
+  }
+  .tile .tile-txt b{display:block; font-size:14.5px; color:var(--ink);}
+  .tile .tile-txt span{font-size:12px; color:#6B8F6E;}
+  .tile .chev{margin-left:auto; color:var(--sage); font-size:18px;}
+
+  /* ---------- Forms ---------- */
+  label.field-label{display:block; font-size:12px; font-weight:600; color:var(--green); margin:14px 0 5px;}
+  input[type=text], input[type=date], input[type=number], select, textarea{
+    width:100%; font-family:inherit; font-size:14px; color:var(--ink);
+    background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:10px 12px;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--sage); outline-offset:1px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .hint{font-size:11px; color:#8A8672; margin-top:4px;}
+
+  .point{
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; background:#fff;
+  }
+  .point-name{font-weight:600; font-size:13.5px; margin-bottom:8px;}
+  .seg{display:flex; gap:6px; margin-bottom:8px;}
+  .seg button{
+    flex:1; border:1.5px solid var(--line); background:#fff; border-radius:9px;
+    padding:8px 0; font-family:inherit; font-weight:700; font-size:13px; color:#8A8672; cursor:pointer;
+  }
+  .seg button.on-ok{background:var(--ok); border-color:var(--ok); color:#fff;}
+  .seg button.on-x{background:var(--bad); border-color:var(--bad); color:#fff;}
+  .seg button.on-nc{background:#B9B6A8; border-color:#B9B6A8; color:#fff;}
+  .point textarea{min-height:38px; resize:vertical; font-size:13px;}
+  .point .plazo{margin-top:8px;}
+
+  .section-divider{
+    font-size:11px; font-weight:700; color:var(--sage); text-transform:uppercase;
+    letter-spacing:.6px; margin:20px 0 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600;
+    color:var(--green); background:none; border:none; cursor:pointer; padding:0 0 12px; font-family:inherit;
+  }
+
+  /* ---------- Historial ---------- */
+  .hist-item{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:13px 15px; margin-bottom:10px; cursor:pointer;
+  }
+  .hist-item .hi-top{display:flex; justify-content:space-between; align-items:center;}
+  .hist-item b{font-size:14px;}
+  .hist-item .hi-date{font-size:11.5px; color:#8A8672;}
+  .hist-item .hi-summary{font-size:12px; color:#5B5748; margin-top:4px;}
+  .pill{
+    display:inline-block; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:20px; margin-right:4px;
+  }
+  .pill.ok{background:rgba(76,113,86,.15); color:var(--ok);}
+  .pill.bad{background:rgba(180,68,46,.15); color:var(--bad);}
+  .pill.nc{background:rgba(139,138,124,.18); color:#6B685A;}
+
+  .empty{
+    text-align:center; padding:36px 20px; color:#8A8672; font-size:13px;
+  }
+  .empty b{display:block; color:var(--ink); font-size:14px; margin-bottom:4px;}
+
+  /* ---------- Bottom nav ---------- */
+  nav.tabbar{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px; background:#fff; border-top:1px solid var(--line);
+    display:flex; z-index:30;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav.tabbar button{
+    flex:1; background:none; border:none; font-family:inherit; cursor:pointer;
+    padding:9px 2px 7px; display:flex; flex-direction:column; align-items:center; gap:2px;
+    color:#B9B6A8; font-size:9.3px; font-weight:600;
+  }
+  nav.tabbar button .ic{font-size:17px; line-height:1;}
+  nav.tabbar button.active{color:var(--green);}
+
+  .alert-card{
+    background:#FBEAE6; border:1px solid #E7B7A8; border-radius:14px; padding:13px 15px; margin-bottom:12px;
+  }
+  .alert-card b{font-size:13.5px; color:var(--bad); display:block; margin-bottom:2px;}
+  .alert-card span{font-size:12px; color:#7A4436;}
+
+  .prod-row{display:grid; grid-template-columns:1.3fr .8fr 1fr auto; gap:6px; align-items:center; margin-bottom:8px;}
+  .prod-row select, .prod-row input{font-size:12.5px; padding:8px 8px;}
+  .rm-btn{
+    background:none; border:none; color:var(--bad); font-size:18px; cursor:pointer; padding:0 4px;
+  }
+  .result-row{
+    display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px dashed var(--line);
+  }
+  .result-row:last-child{border-bottom:none;}
+  .order-list-num{
+    counter-reset:carga;
+  }
+  .order-list-num li{
+    counter-increment:carga;
+    list-style:none; position:relative; padding-left:26px; margin-bottom:6px; font-size:13px;
+  }
+  .order-list-num li::before{
+    content:counter(carga); position:absolute; left:0; top:-1px;
+    background:var(--sage); color:#fff; width:19px; height:19px; border-radius:50%;
+    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .dt-result{
+    border-radius:14px; padding:14px; margin-top:10px; font-size:13px;
+  }
+  .dt-result.ok{background:rgba(76,113,86,.13); color:var(--ok);}
+  .dt-result.warn{background:rgba(201,138,46,.15); color:var(--warn);}
+  .dt-result.bad{background:rgba(180,68,46,.13); color:var(--bad);}
+  .dt-result b{display:block; font-size:14.5px; margin-bottom:3px;}
+  .quick-actions{display:flex; gap:10px; margin-bottom:14px;}
+  .op-log{display:flex; gap:8px; margin:10px 0;}
+  .op-log button{flex:1;}
+  .op-log .done{background:var(--sage); color:#fff; border:1.5px solid var(--sage);}
+  .orden-mini{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin-bottom:8px; font-size:12.5px;
+  }
+  .orden-mini b{font-size:13.5px; display:block;}
+  .orden-mini .om-meta{color:#8A8672; margin-top:2px;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(31,42,34,.45); z-index:50;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--bg); width:100%; max-width:480px; border-radius:20px 20px 0 0;
+    padding:20px 18px 26px; max-height:88vh; overflow-y:auto;
+  }
+  .modal-handle{width:38px; height:4px; background:var(--line); border-radius:3px; margin:0 auto 14px;}
+
+  .toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); padding:10px 18px; border-radius:30px;
+    font-size:12.5px; font-weight:600; z-index:60; opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="loginScreen" style="position:fixed; inset:0; z-index:100; background:var(--green); display:flex; align-items:center; justify-content:center; padding:24px;">
+    <div style="max-width:340px; width:100%;">
+      <svg viewBox="0 0 120 120" width="60" height="60" style="display:block; margin:0 auto 10px;">
+        <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="60" cy="88" r="5" fill="#F2F0E4"/>
+        <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#F2F0E4" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#F2F0E4"/>
+        <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#F2F0E4" opacity="0.65"/>
+      </svg>
+      <div style="text-align:center; color:var(--paper); font-weight:800; font-size:20px; margin-bottom:2px;">PG<span style="color:var(--amber); font-weight:500;">Agro</span></div>
+      <div style="text-align:center; color:var(--amber); font-size:12px; margin-bottom:22px;">Chequeos de equipos</div>
+
+      <div style="background:var(--paper); border-radius:16px; padding:18px;">
+        <div style="display:flex; gap:6px; margin-bottom:14px;">
+          <button type="button" id="tabLogin" class="btn btn-small" style="flex:1; background:var(--green); color:var(--paper);" onclick="mostrarTab('login')">Iniciar sesión</button>
+          <button type="button" id="tabRegistro" class="btn btn-small" style="flex:1; background:transparent; color:var(--green); border:1.5px solid var(--green);" onclick="mostrarTab('registro')">Crear cuenta</button>
+        </div>
+
+        <div id="bloqueLogin">
+          <label class="field-label" style="margin-top:0;">Email</label>
+          <input type="text" id="li_email" placeholder="tu@email.com">
+          <label class="field-label">Contraseña</label>
+          <input type="password" id="li_pass" placeholder="••••••••">
+          <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="hacerLogin()">Entrar</button>
+        </div>
+
+        <div id="bloqueRegistro" style="display:none;">
+          <label class="field-label" style="margin-top:0;">Nombre y apellido</label>
+          <input type="text" id="re_nombre" placeholder="Como te van a ver en la app">
+          <label class="field-label">Email</label>
+          <input type="text" id="re_email" placeholder="tu@email.com">
+          <label class="field-label">Contraseña</label>
+          <input type="password" id="re_pass" placeholder="Mínimo 6 caracteres">
+          <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="hacerRegistro()">Crear cuenta y entrar</button>
+        </div>
+
+        <div id="loginError" class="hint" style="color:#B4442E; margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainScreen" style="display:none;">
+
+  <header>
+    <svg class="icon" viewBox="0 0 120 120">
+      <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="60" cy="88" r="5" fill="#F2F0E4"/>
+      <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#F2F0E4" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#F2F0E4"/>
+      <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#F2F0E4" opacity="0.65"/>
+    </svg>
+    <div class="brand">
+      <b>PG<span style="color:var(--amber); font-weight:500;">Agro</span></b>
+      <span>Chequeos de equipos</span>
+    </div>
+    <div class="today">
+      <div id="connStatus" style="font-size:10px; margin-bottom:2px;">🟡 Conectando…</div>
+      <div id="todayLabel"></div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===================== HOY ===================== -->
+    <section class="view active" id="view-hoy">
+      <h1 class="page-title">Estado de los equipos</h1>
+      <div id="reportAlerts"></div>
+      <div class="quick-actions">
+        <button class="btn btn-outline" style="border-color:var(--bad); color:var(--bad);" onclick="openReporte()">⚠ Reportar problema</button>
+      </div>
+      <div id="trabajoHoyCard"></div>
+      <div id="hoyList"></div>
+    </section>
+
+    <!-- ===================== CHEQUEOS (elegir tipo) ===================== -->
+    <section class="view" id="view-chequeos">
+      <h1 class="page-title">Realizar un chequeo</h1>
+      <div class="tile" onclick="openForm('vehiculo')">
+        <div class="tile-ico">🚚</div>
+        <div class="tile-txt"><b>Vehículo</b><span>Mensual · service cada 10.000 km</span></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="tile" onclick="openForm('acoplado')">
+        <div class="tile-ico">🚜</div>
+        <div class="tile-txt"><b>Acoplado (zorra)</b><span>Mensual</span></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="tile" onclick="openForm('dron')">
+        <div class="tile-ico">🛸</div>
+        <div class="tile-txt"><b>Drones</b><span>Semanal · service cada 100 hs</span></div>
+        <div class="chev">›</div>
+      </div>
+      <div class="tile" onclick="openForm('generador')">
+        <div class="tile-ico">⚡</div>
+        <div class="tile-txt"><b>Generador</b><span>Mensual · service cada 100 hs</span></div>
+        <div class="chev">›</div>
+      </div>
+    </section>
+
+    <!-- ===================== TRABAJO ===================== -->
+    <section class="view" id="view-trabajo">
+      <h1 class="page-title">Orden del día</h1>
+      <label class="field-label" style="margin-top:0;">Cliente</label>
+      <input type="text" id="o_cliente" placeholder="Nombre del cliente">
+      <label class="field-label">Campo</label>
+      <input type="text" id="o_campo" placeholder="Nombre del campo">
+      <div class="row2">
+        <div>
+          <label class="field-label">Contacto</label>
+          <input type="text" id="o_contacto" placeholder="Nombre">
+        </div>
+        <div>
+          <label class="field-label">Teléfono</label>
+          <input type="text" id="o_telefono" placeholder="09X XXX XXX">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label class="field-label">Superficie (ha)</label>
+          <input type="number" id="o_superficie" min="0" placeholder="0">
+        </div>
+        <div>
+          <label class="field-label">Labor</label>
+          <input type="text" id="o_labor" placeholder="Herbicida, fungicida...">
+        </div>
+      </div>
+      <label class="field-label">Drones asignados</label>
+      <input type="text" id="o_drones" placeholder="Ej: XAG P150 + DJI Mavic 3M">
+      <label class="field-label">Ubicación / link de mapa</label>
+      <input type="text" id="o_ubicacion" placeholder="Pegar link de Google Maps">
+      <label class="field-label">Observaciones</label>
+      <textarea id="o_observaciones" placeholder="Opcional" style="min-height:60px;"></textarea>
+      <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="guardarOrden()">Guardar orden</button>
+
+      <div class="section-divider">Registro operativo</div>
+      <label class="field-label" style="margin-top:0;">Orden activa</label>
+      <select id="o_activa" onchange="renderRegistro()"></select>
+      <div class="op-log">
+        <button class="btn btn-outline btn-small" id="btnLlegue" onclick="marcarHito('llegada')">Llegué al campo</button>
+        <button class="btn btn-outline btn-small" id="btnInicio" onclick="marcarHito('inicio')">Comenzar trabajo</button>
+        <button class="btn btn-outline btn-small" id="btnFin" onclick="marcarHito('fin')">Terminamos</button>
+      </div>
+      <div id="registroInfo" class="hint"></div>
+
+      <div class="section-divider">Condiciones de aplicación</div>
+      <div class="row2">
+        <div>
+          <label class="field-label" style="margin-top:0;">Temperatura °C</label>
+          <input type="number" id="c_temp" placeholder="0">
+        </div>
+        <div>
+          <label class="field-label" style="margin-top:0;">Humedad %</label>
+          <input type="number" id="c_hum" placeholder="0">
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label class="field-label">Viento km/h</label>
+          <input type="number" id="c_viento" placeholder="0">
+        </div>
+        <div>
+          <label class="field-label">Dirección</label>
+          <select id="c_dir">
+            <option>N</option><option>NE</option><option>E</option><option>SE</option>
+            <option>S</option><option>SO</option><option>O</option><option>NO</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-amber btn-block" style="margin-top:12px;" onclick="evaluarCondiciones()">Evaluar condiciones</button>
+      <div id="dtResult"></div>
+      <div class="hint">Delta T estimado a partir de temperatura y humedad (aproximación de bulbo húmedo). El viento se evalúa aparte: evitar aplicar con ráfagas fuertes o muy sostenidas, y respetar siempre la etiqueta del producto.</div>
+
+      <div class="section-divider">Órdenes de hoy</div>
+      <div id="ordenesHoyList"></div>
+    </section>
+
+    <!-- ===================== CALDO ===================== -->
+    <section class="view" id="view-caldo">
+      <h1 class="page-title">Preparación de caldo</h1>
+      <div class="row2">
+        <div>
+          <label class="field-label" style="margin-top:0;">Superficie (ha)</label>
+          <input type="number" id="m_superficie" min="0" placeholder="0">
+        </div>
+        <div>
+          <label class="field-label" style="margin-top:0;">Volumen (L/ha)</label>
+          <input type="number" id="m_volumenha" min="0" placeholder="0">
+        </div>
+      </div>
+      <div class="hint" id="m_volTotalHint"></div>
+
+      <div class="section-divider">Productos</div>
+      <div id="productosWrap"></div>
+      <button class="btn btn-outline btn-small" onclick="addProductoRow()">+ Agregar producto</button>
+      <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="calcularCaldo()">Calcular</button>
+      <div id="caldoResultado"></div>
+
+      <div class="section-divider">Preparar por tanda</div>
+      <label class="field-label" style="margin-top:0;">Tamaño de tanda (L)</label>
+      <input type="number" id="m_tanda" min="0" placeholder="0">
+      <button class="btn btn-outline btn-block" style="margin-top:10px;" onclick="calcularTanda()">Calcular tanda</button>
+      <div id="tandaResultado"></div>
+
+      <div class="section-divider">Orden de carga</div>
+      <ol class="order-list-num">
+        <li>Agua inicial</li>
+        <li>Correctores</li>
+        <li>Coadyuvantes sintéticos</li>
+        <li>WG</li>
+        <li>WP</li>
+        <li>SC</li>
+        <li>EC</li>
+        <li>SL</li>
+        <li>Aceites</li>
+        <li>Foliares</li>
+      </ol>
+      <div class="hint">Orden orientativo. Respetar etiqueta y criterio técnico.</div>
+    </section>
+
+    <!-- ===================== HISTORIAL ===================== -->
+    <section class="view" id="view-historial">
+      <h1 class="page-title">Historial de chequeos</h1>
+      <div id="histList"></div>
+      <div class="section-divider">Reportes de problemas</div>
+      <div id="reportesList"></div>
+    </section>
+
+    <!-- ===================== EQUIPO ===================== -->
+    <section class="view" id="view-equipo">
+      <h1 class="page-title">Carga por operador — este mes</h1>
+      <div id="equipoList"></div>
+      <div class="hint" style="margin-top:6px;">Suma de hectáreas de los trabajos marcados como "Terminamos" este mes, agrupadas por quien inició sesión al cargar la orden. Sirve de base para el esquema de bono por hectáreas.</div>
+      <div class="section-divider">Tu sesión</div>
+      <div class="card" id="miSesionCard"></div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="hoy" onclick="showView('hoy')"><span class="ic">🏠</span>HOY</button>
+    <button class="tab-btn" data-view="chequeos" onclick="showView('chequeos')"><span class="ic">✅</span>CHEQUEOS</button>
+    <button class="tab-btn" data-view="trabajo" onclick="showView('trabajo')"><span class="ic">📋</span>TRABAJO</button>
+    <button class="tab-btn" data-view="caldo" onclick="showView('caldo')"><span class="ic">🧪</span>CALDO</button>
+    <button class="tab-btn" data-view="historial" onclick="showView('historial')"><span class="ic">🕘</span>HISTORIAL</button>
+    <button class="tab-btn" data-view="equipo" onclick="showView('equipo')"><span class="ic">👥</span>EQUIPO</button>
+  </nav>
+
+  <div class="modal-overlay" id="formOverlay">
+    <div class="modal" id="formModal"></div>
+  </div>
+
+  <div class="modal-overlay" id="detailOverlay">
+    <div class="modal" id="detailModal"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  </div><!-- /mainScreen -->
+</div>
+
+<script type="module">
+/* =========================================================
+   PGAgro · Chequeos — CONFIGURACIÓN DE FIREBASE
+   =========================================================
+   Para que todos los operadores vean los mismos datos, esta
+   app usa Firebase (Firestore) como base de datos compartida
+   en tiempo real, gratis para este volumen de uso.
+
+   PASOS (una sola vez):
+   1. Anda a https://console.firebase.google.com → "Agregar proyecto"
+      → ponele un nombre (ej. "pgagro-chequeos") → creá el proyecto.
+   2. En el menú izquierdo: "Compilación" → "Firestore Database"
+      → "Crear base de datos" → modo producción → elegí una región
+      (ej. southamerica-east1) → Habilitar.
+   3. Andá a "Reglas" (dentro de Firestore) y pegá el bloque de
+      reglas que te paso más abajo en el chat → Publicar.
+   4. En el menú izquierdo: "Compilación" → "Authentication"
+      → "Comenzar" → pestaña "Sign-in method" → habilitá "Anónimo".
+   5. Anda al ícono de engranaje (arriba a la izquierda) →
+      "Configuración del proyecto" → bajá hasta "Tus apps" →
+      ícono </> (Web) → registrá una app (cualquier nombre) →
+      copiá el objeto "firebaseConfig" que te muestra.
+   6. Pegá ese objeto acá abajo, reemplazando el de ejemplo.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBwI0QRf9LPsyAPqvwIvQrM3YuQ2Yf5I-M",
+  authDomain: "pgagro---checklist.firebaseapp.com",
+  projectId: "pgagro---checklist",
+  storageBucket: "pgagro---checklist.firebasestorage.app",
+  messagingSenderId: "777651668678",
+  appId: "1:777651668678:web:74cfdf4daba2b3468d79c7"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  updateProfile, signOut
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const auth = getAuth(fbApp);
+
+const connEl = () => document.getElementById("connStatus");
+
+function currentOperadorNombre(){
+  const u = auth.currentUser;
+  if(!u) return "Desconocido";
+  return u.displayName || u.email;
+}
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("mainScreen").style.display = "block";
+    if(connEl()) connEl().textContent = "🟢 " + currentOperadorNombre();
+    iniciarEscuchas();
+  }else{
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("mainScreen").style.display = "none";
+  }
+});
+
+function mostrarTab(tab){
+  const esLogin = tab==="login";
+  document.getElementById("bloqueLogin").style.display = esLogin ? "block" : "none";
+  document.getElementById("bloqueRegistro").style.display = esLogin ? "none" : "block";
+  document.getElementById("tabLogin").style.background = esLogin ? "var(--green)" : "transparent";
+  document.getElementById("tabLogin").style.color = esLogin ? "var(--paper)" : "var(--green)";
+  document.getElementById("tabRegistro").style.background = esLogin ? "transparent" : "var(--green)";
+  document.getElementById("tabRegistro").style.color = esLogin ? "var(--green)" : "var(--paper)";
+  document.getElementById("loginError").textContent = "";
+}
+
+function traducirErrorAuth(codigo){
+  const mapa = {
+    "auth/invalid-email":"El email no es válido.",
+    "auth/user-not-found":"No existe una cuenta con ese email.",
+    "auth/wrong-password":"Contraseña incorrecta.",
+    "auth/invalid-credential":"Email o contraseña incorrectos.",
+    "auth/email-already-in-use":"Ya existe una cuenta con ese email — iniciá sesión en vez de crear una nueva.",
+    "auth/weak-password":"La contraseña necesita al menos 6 caracteres."
+  };
+  return mapa[codigo] || "No se pudo completar la operación. Revisá los datos e intentá de nuevo.";
+}
+
+function hacerLogin(){
+  const email = document.getElementById("li_email").value.trim();
+  const pass = document.getElementById("li_pass").value;
+  document.getElementById("loginError").textContent = "";
+  signInWithEmailAndPassword(auth, email, pass)
+    .catch(err=>{ document.getElementById("loginError").textContent = traducirErrorAuth(err.code); });
+}
+
+function hacerRegistro(){
+  const nombre = document.getElementById("re_nombre").value.trim();
+  const email = document.getElementById("re_email").value.trim();
+  const pass = document.getElementById("re_pass").value;
+  document.getElementById("loginError").textContent = "";
+  if(!nombre){ document.getElementById("loginError").textContent = "Ingresá tu nombre y apellido."; return; }
+  createUserWithEmailAndPassword(auth, email, pass)
+    .then(cred => updateProfile(cred.user, { displayName: nombre }))
+    .catch(err=>{ document.getElementById("loginError").textContent = traducirErrorAuth(err.code); });
+}
+
+function cerrarSesion(){
+  signOut(auth);
+}
+
+
+/* =========================================================
+   Configuración de la matriz de chequeos
+   Editá EQUIPOS para agregar/quitar puntos, cambiar
+   frecuencias o renombrar equipos.
+   ========================================================= */
+const EQUIPOS = {
+  vehiculo: {
+    label: "Vehículo",
+    unidad: "km",
+    frecuenciaDias: 30,
+    intervaloService: 10000,
+    idsSugeridos: ["Camión KIA 4x4"],
+    puntos: [
+      "Nivel de fluidos varios","Presión de neumáticos","Funcionamiento de luces",
+      "Tomas eléctricas a acoplados","Revisión de tiro","Revisión de frenos",
+      "Botiquín","Extintor","Herramientas","Auxiliar","Estado de neumáticos","Otros"
+    ]
+  },
+  acoplado: {
+    label: "Acoplado (zorra)",
+    unidad: null,
+    frecuenciaDias: 30,
+    intervaloService: null,
+    idsSugeridos: ["Zorra"],
+    puntos: [
+      "Enganche","Cubiertas","Cadenas y mosquetones","Ejes y masas","Luces",
+      "Puertas/Barandas/Chasis","Tanques y bombas","Engrasar válvulas","Conexiones eléctricas"
+    ]
+  },
+  dron: {
+    label: "Drones",
+    unidad: "horas",
+    frecuenciaDias: 7,
+    intervaloService: 100,
+    idsSugeridos: ["XAG P150","DJI Mavic 3M"],
+    puntos: [
+      "Hélices","Motores","Tren de aterrizaje","Sistema de pulverizado","Sistema de esparcido",
+      "Baterías (limpieza gral, pines y estado de carga)","Cargador","Conexiones eléctricas y fichas"
+    ]
+  },
+  generador: {
+    label: "Generador",
+    unidad: "horas",
+    frecuenciaDias: 30,
+    intervaloService: 100,
+    idsSugeridos: ["Generador grande"],
+    puntos: [
+      "Filtro de aire","Filtro de combustible","Nivel de líquido refrigerante",
+      "Nivel de aceite","Reemplazo de filtro de aceite"
+    ]
+  }
+};
+
+const PLAZOS = ["Sin corrección","Hoy","24 horas","3 días","7 días"];
+
+/* ---------- datos compartidos en tiempo real (Firestore) ---------- */
+let STORE = { checklists: [], ordenes: [], reportes: [] };
+
+function refrescarVistaActual(){
+  const activa = document.querySelector(".tab-btn.active");
+  const nombre = activa ? activa.dataset.view : "hoy";
+  if(nombre==="hoy") renderHoy();
+  if(nombre==="historial") renderHistorial();
+  if(nombre==="trabajo") renderTrabajo();
+  if(nombre==="equipo") renderEquipo();
+}
+
+function iniciarEscuchas(){
+  // Sin orderBy en el servidor: si algún documento llegara a faltarle el
+  // campo "fecha" (por ejemplo, tras un cambio futuro), Firestore lo
+  // excluiría en silencio de la consulta. Ordenamos acá en su lugar.
+  onSnapshot(collection(db,"checklists"), (snap)=>{
+    STORE.checklists = snap.docs.map(d=>({ id:d.id, ...d.data() }))
+      .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
+    refrescarVistaActual();
+  }, err=>console.error("checklists:", err));
+
+  onSnapshot(collection(db,"ordenes"), (snap)=>{
+    STORE.ordenes = snap.docs.map(d=>({ id:d.id, ...d.data() }))
+      .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
+    refrescarVistaActual();
+  }, err=>console.error("ordenes:", err));
+
+  onSnapshot(collection(db,"reportes"), (snap)=>{
+    STORE.reportes = snap.docs.map(d=>({ id:d.id, ...d.data() }))
+      .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
+    refrescarVistaActual();
+  }, err=>console.error("reportes:", err));
+}
+
+function fmtDate(d){
+  const dt = new Date(d+"T00:00:00");
+  return dt.toLocaleDateString("es-UY",{day:"2-digit",month:"2-digit",year:"numeric"});
+}
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function addDays(dateStr, days){
+  const d = new Date(dateStr+"T00:00:00");
+  d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+"T00:00:00") - new Date(a+"T00:00:00")) / 86400000);
+}
+
+document.getElementById("todayLabel").textContent = fmtDate(todayStr());
+
+/* ---------- navegación de tabs ---------- */
+function showView(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.view===name));
+  if(name==="hoy") renderHoy();
+  if(name==="historial") renderHistorial();
+  if(name==="trabajo") renderTrabajo();
+  if(name==="equipo") renderEquipo();
+}
+
+/* ---------- HOY: estado por tipo de equipo ---------- */
+function lastChecklistFor(tipo){
+  const items = STORE.checklists.filter(c=>c.tipo===tipo).sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  return items[0] || null;
+}
+
+function statusFor(tipo){
+  const last = lastChecklistFor(tipo);
+  if(!last) return {dot:"grey", label:"Sin registrar", next:null};
+  const hoy = todayStr();
+  const diff = daysBetween(hoy, last.proximoChequeo);
+  if(diff < 0) return {dot:"bad", label:"Vencido", next:last.proximoChequeo, last};
+  if(diff <= 3) return {dot:"warn", label:"Próximo a vencer", next:last.proximoChequeo, last};
+  return {dot:"ok", label:"Al día", next:last.proximoChequeo, last};
+}
+
+function renderHoy(){
+  // alertas de reportes abiertos (no "Puede continuar")
+  const alertsEl = document.getElementById("reportAlerts");
+  const abiertos = STORE.reportes.filter(r=>r.estado!=="Puede continuar").sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  alertsEl.innerHTML = abiertos.map(r=>`
+    <div class="alert-card">
+      <b>${r.equipo} · ${r.estado}</b>
+      <span>${r.detalle}</span>
+    </div>
+  `).join("");
+
+  // trabajo de hoy
+  const hoyOrdenes = STORE.ordenes.filter(o=>o.fecha===todayStr());
+  const trabajoEl = document.getElementById("trabajoHoyCard");
+  if(hoyOrdenes.length===0){
+    trabajoEl.innerHTML = "";
+  }else{
+    trabajoEl.innerHTML = `
+      <div class="section-divider">Trabajo de hoy</div>
+      ${hoyOrdenes.map(o=>`
+        <div class="orden-mini">
+          <b>${o.cliente || "Sin cliente"} — ${o.campo || ""}</b>
+          <div class="om-meta">${o.superficie||0} ha · ${o.labor||"—"} · ${o.drones||""}</div>
+          <div class="om-meta">${o.llegada?("Llegada "+o.llegada.slice(11,16)+" · "):""}${o.inicio?("Inicio "+o.inicio.slice(11,16)+" · "):""}${o.fin?("Fin "+o.fin.slice(11,16)):""}</div>
+        </div>
+      `).join("")}
+    `;
+  }
+
+  const el = document.getElementById("hoyList");
+  el.innerHTML = "";
+  Object.keys(EQUIPOS).forEach(tipo=>{
+    const cfg = EQUIPOS[tipo];
+    const st = statusFor(tipo);
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-row">
+        <span class="dot ${st.dot}"></span>
+        <div>
+          <div class="card-title">${cfg.label}</div>
+          <div class="card-sub">${st.label}${st.last ? " · " + st.last.equipo : ""}</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${st.last ? "Último chequeo: " + fmtDate(st.last.fecha) + " · Próximo: " + fmtDate(st.next) : "Todavía no se registró ningún chequeo."}
+      </div>
+      <button class="btn btn-primary btn-block" onclick="openForm('${tipo}')">Realizar chequeo</button>
+    `;
+    el.appendChild(card);
+  });
+}
+
+/* ---------- Formulario de chequeo ---------- */
+let currentTipo = null;
+
+function openForm(tipo){
+  currentTipo = tipo;
+  const cfg = EQUIPOS[tipo];
+  const modal = document.getElementById("formModal");
+
+  const unidadLabel = cfg.unidad === "km" ? "Kilómetros" : cfg.unidad === "horas" ? "Horas" : null;
+
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Chequeo de ${cfg.label.toLowerCase()}</h1>
+
+    <label class="field-label">Equipo</label>
+    <input type="text" id="f_equipo" list="dl_${tipo}" placeholder="Nombre o identificador">
+    <datalist id="dl_${tipo}">${cfg.idsSugeridos.map(x=>`<option value="${x}">`).join("")}</datalist>
+
+    <div class="row2">
+      <div>
+        <label class="field-label">Fecha del chequeo</label>
+        <input type="date" id="f_fecha" value="${todayStr()}">
+      </div>
+      <div>
+        <label class="field-label">Realizado por</label>
+        <input type="text" id="f_realizador" placeholder="Nombre">
+      </div>
+    </div>
+
+    ${unidadLabel ? `
+    <div class="row2">
+      <div>
+        <label class="field-label">${unidadLabel} actuales</label>
+        <input type="number" id="f_actuales" min="0" placeholder="0">
+      </div>
+      <div>
+        <label class="field-label">${unidadLabel} último service</label>
+        <input type="number" id="f_ultimoservice" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="hint" id="serviceHint"></div>
+    ` : ""}
+
+    <div class="section-divider">Puntos a revisar</div>
+    <div id="pointsWrap">
+      ${cfg.puntos.map((p,i)=>`
+        <div class="point" data-idx="${i}">
+          <div class="point-name">${p}</div>
+          <div class="seg">
+            <button type="button" data-val="OK" onclick="setEstado(${i},'OK',this)">✓ OK</button>
+            <button type="button" data-val="X" onclick="setEstado(${i},'X',this)">✕ Falla</button>
+            <button type="button" data-val="NC" onclick="setEstado(${i},'NC',this)">NC</button>
+          </div>
+          <textarea placeholder="Observaciones (opcional)" id="obs_${i}"></textarea>
+          <div class="plazo">
+            <label class="field-label" style="margin:8px 0 4px;">Plazo de corrección</label>
+            <select id="plazo_${i}">
+              ${PLAZOS.map(p=>`<option value="${p}">${p}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="saveChecklist()">Guardar chequeo</button>
+  `;
+
+  currentEstados = {};
+  document.getElementById("formOverlay").classList.add("show");
+
+  if(unidadLabel){
+    const hint = document.getElementById("serviceHint");
+    const upd = ()=>{
+      const act = parseFloat(document.getElementById("f_actuales").value)||0;
+      const ult = parseFloat(document.getElementById("f_ultimoservice").value)||0;
+      const rest = cfg.intervaloService - (act-ult);
+      if(act>0 && ult>0){
+        hint.textContent = rest<=0
+          ? "⚠ Service vencido según los " + unidadLabel.toLowerCase() + " cargados."
+          : "Faltan aprox. " + Math.round(rest) + " " + unidadLabel.toLowerCase() + " para el próximo service (cada " + cfg.intervaloService + ").";
+      } else hint.textContent = "";
+    };
+    document.getElementById("f_actuales").addEventListener("input", upd);
+    document.getElementById("f_ultimoservice").addEventListener("input", upd);
+  }
+}
+
+let currentEstados = {};
+function setEstado(idx, val, btn){
+  currentEstados[idx] = val;
+  const seg = btn.parentElement;
+  seg.querySelectorAll("button").forEach(b=>b.classList.remove("on-ok","on-x","on-nc"));
+  btn.classList.add(val==="OK"?"on-ok":val==="X"?"on-x":"on-nc");
+}
+
+function closeForm(){
+  document.getElementById("formOverlay").classList.remove("show");
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function saveChecklist(){
+  const cfg = EQUIPOS[currentTipo];
+  const equipo = document.getElementById("f_equipo").value.trim() || cfg.idsSugeridos[0] || cfg.label;
+  const fecha = document.getElementById("f_fecha").value || todayStr();
+  const realizador = document.getElementById("f_realizador").value.trim();
+
+  let actuales = null, ultimoService = null;
+  if(cfg.unidad){
+    actuales = parseFloat(document.getElementById("f_actuales").value)||0;
+    ultimoService = parseFloat(document.getElementById("f_ultimoservice").value)||0;
+  }
+
+  const puntos = cfg.puntos.map((nombre,i)=>({
+    nombre,
+    estado: currentEstados[i] || "NC",
+    observaciones: document.getElementById("obs_"+i).value.trim(),
+    plazo: document.getElementById("plazo_"+i).value
+  }));
+
+  const proximoChequeo = addDays(fecha, cfg.frecuenciaDias);
+
+  const nuevoChequeo = {
+    tipo: currentTipo, equipo, fecha, realizador,
+    operador: currentOperadorNombre(),
+    actuales, ultimoService, intervaloService: cfg.intervaloService,
+    unidad: cfg.unidad, proximoChequeo, puntos, createdAt: serverTimestamp()
+  };
+  closeForm();
+  addDoc(collection(db,"checklists"), nuevoChequeo)
+    .then(()=>{
+      showToast("Chequeo guardado · próximo el " + fmtDate(proximoChequeo));
+      showView("hoy");
+    })
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+/* ---------- Historial ---------- */
+function renderHistorial(){
+  const el = document.getElementById("histList");
+  const items = [...STORE.checklists].sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  if(items.length===0){
+    el.innerHTML = `<div class="empty"><b>Todavía no hay chequeos guardados.</b>Realizá el primero desde la pestaña Chequeos.</div>`;
+  }else{
+    el.innerHTML = items.map(it=>{
+      const ok = it.puntos.filter(p=>p.estado==="OK").length;
+      const x = it.puntos.filter(p=>p.estado==="X").length;
+      const nc = it.puntos.filter(p=>p.estado==="NC").length;
+      return `
+        <div class="hist-item" onclick="openDetail('${it.id}')">
+          <div class="hi-top">
+            <b>${EQUIPOS[it.tipo].label} — ${it.equipo}</b>
+            <span class="hi-date">${fmtDate(it.fecha)}</span>
+          </div>
+          <div class="hi-summary">
+            <span class="pill ok">${ok} OK</span>
+            ${x>0 ? `<span class="pill bad">${x} falla${x>1?"s":""}</span>` : ""}
+            ${nc>0 ? `<span class="pill nc">${nc} NC</span>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  const repEl = document.getElementById("reportesList");
+  const reportes = [...STORE.reportes].sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  if(reportes.length===0){
+    repEl.innerHTML = `<div class="empty"><b>No hay reportes de problemas.</b>Podés cargar uno desde la pestaña Hoy.</div>`;
+  }else{
+    repEl.innerHTML = reportes.map(r=>`
+      <div class="hist-item">
+        <div class="hi-top">
+          <b>${r.equipo}</b>
+          <span class="hi-date">${fmtDate(r.fecha)}</span>
+        </div>
+        <div class="hi-summary">
+          <span class="pill ${r.estado==='Puede continuar'?'ok':r.estado==='Equipo detenido'?'bad':'nc'}">${r.estado}</span>
+        </div>
+        <div class="hi-summary" style="margin-top:6px;">${r.detalle}</div>
+      </div>
+    `).join("");
+  }
+}
+
+/* ==========================================================
+   TRABAJO — orden del día, registro operativo, condiciones
+   ========================================================== */
+function guardarOrden(){
+  const orden = {
+    fecha: todayStr(),
+    operador: currentOperadorNombre(),
+    cliente: document.getElementById("o_cliente").value.trim(),
+    campo: document.getElementById("o_campo").value.trim(),
+    contacto: document.getElementById("o_contacto").value.trim(),
+    telefono: document.getElementById("o_telefono").value.trim(),
+    superficie: parseFloat(document.getElementById("o_superficie").value)||0,
+    labor: document.getElementById("o_labor").value.trim(),
+    drones: document.getElementById("o_drones").value.trim(),
+    ubicacion: document.getElementById("o_ubicacion").value.trim(),
+    observaciones: document.getElementById("o_observaciones").value.trim(),
+    llegada: null, inicio: null, fin: null, createdAt: serverTimestamp()
+  };
+  addDoc(collection(db,"ordenes"), orden)
+    .then(()=>{
+      ["o_cliente","o_campo","o_contacto","o_telefono","o_superficie","o_labor","o_drones","o_ubicacion","o_observaciones"]
+        .forEach(id=>document.getElementById(id).value="");
+      showToast("Orden guardada");
+    })
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+function renderTrabajo(){
+  const hoyOrdenes = STORE.ordenes.filter(o=>o.fecha===todayStr());
+  const sel = document.getElementById("o_activa");
+  const prevVal = sel.value;
+  sel.innerHTML = hoyOrdenes.length===0
+    ? `<option value="">Sin órdenes cargadas hoy</option>`
+    : hoyOrdenes.map(o=>`<option value="${o.id}">${o.cliente||"Sin cliente"} — ${o.campo||""}</option>`).join("");
+  if(hoyOrdenes.some(o=>o.id===prevVal)) sel.value = prevVal;
+
+  const listEl = document.getElementById("ordenesHoyList");
+  listEl.innerHTML = hoyOrdenes.length===0
+    ? `<div class="empty"><b>Todavía no cargaste órdenes hoy.</b>Completá el formulario de arriba.</div>`
+    : hoyOrdenes.map(o=>`
+        <div class="orden-mini">
+          <b>${o.cliente||"Sin cliente"} — ${o.campo||""}</b>
+          <div class="om-meta">${o.superficie||0} ha · ${o.labor||"—"} · ${o.drones||"sin drones asignados"}</div>
+          <div class="om-meta">${o.contacto?("Contacto: "+o.contacto+(o.telefono?" · "+o.telefono:""))+" · ":""}${o.ubicacion?("<a href='"+o.ubicacion+"' target='_blank' style='color:var(--green)'>Ver mapa</a>"):""}</div>
+          <div class="om-meta">${o.llegada?("Llegada "+o.llegada.slice(11,16)+" · "):""}${o.inicio?("Inicio "+o.inicio.slice(11,16)+" · "):""}${o.fin?("Fin "+o.fin.slice(11,16)):""}</div>
+          ${o.observaciones?`<div class="om-meta">${o.observaciones}</div>`:""}
+        </div>
+      `).join("");
+
+  renderRegistro();
+}
+
+function renderRegistro(){
+  const id = document.getElementById("o_activa").value;
+  const orden = STORE.ordenes.find(o=>o.id===id);
+  const info = document.getElementById("registroInfo");
+  ["btnLlegue","btnInicio","btnFin"].forEach(b=>document.getElementById(b).classList.remove("done"));
+  if(!orden){ info.textContent = "Guardá una orden para poder registrar los horarios."; return; }
+  if(orden.llegada) document.getElementById("btnLlegue").classList.add("done");
+  if(orden.inicio) document.getElementById("btnInicio").classList.add("done");
+  if(orden.fin) document.getElementById("btnFin").classList.add("done");
+  info.textContent = [
+    orden.llegada ? "Llegada: "+orden.llegada.slice(11,16) : null,
+    orden.inicio ? "Inicio: "+orden.inicio.slice(11,16) : null,
+    orden.fin ? "Fin: "+orden.fin.slice(11,16) : null
+  ].filter(Boolean).join(" · ") || "Sin registros todavía.";
+}
+
+function marcarHito(campo){
+  const id = document.getElementById("o_activa").value;
+  const orden = STORE.ordenes.find(o=>o.id===id);
+  if(!orden){ showToast("Primero guardá una orden"); return; }
+  const valor = new Date().toISOString();
+  updateDoc(doc(db,"ordenes",id), { [campo]: valor })
+    .then(()=>{
+      const labels = {llegada:"Llegada registrada", inicio:"Inicio de trabajo registrado", fin:"Fin de trabajo registrado"};
+      showToast(labels[campo]);
+    })
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+function evaluarCondiciones(){
+  const T = parseFloat(document.getElementById("c_temp").value);
+  const RH = parseFloat(document.getElementById("c_hum").value);
+  const box = document.getElementById("dtResult");
+  if(isNaN(T) || isNaN(RH)){
+    box.innerHTML = `<div class="dt-result warn"><b>Faltan datos</b>Cargá temperatura y humedad para estimar el Delta T.</div>`;
+    return;
+  }
+  // Aproximación de bulbo húmedo (Stull, 2011)
+  const Tw = T*Math.atan(0.151977*Math.sqrt(RH+8.313659))
+    + Math.atan(T+RH) - Math.atan(RH-1.676331)
+    + 0.00391838*Math.pow(RH,1.5)*Math.atan(0.023101*RH) - 4.686035;
+  const deltaT = Math.round((T-Tw)*10)/10;
+
+  let cls="ok", msg="Condiciones ideales para aplicar.";
+  if(deltaT<2){ cls="warn"; msg="Delta T bajo: riesgo de escurrimiento por evaporación muy lenta."; }
+  else if(deltaT>=8 && deltaT<=10){ cls="warn"; msg="Condición marginal: extremar precauciones y monitorear."; }
+  else if(deltaT>10){ cls="bad"; msg="No recomendado: alto riesgo de deriva por evaporación excesiva."; }
+
+  box.innerHTML = `<div class="dt-result ${cls}"><b>Delta T ≈ ${deltaT}</b>${msg}</div>`;
+}
+
+/* ==========================================================
+   CALDO — preparación de mezcla
+   ========================================================== */
+let productoIdx = 0;
+function addProductoRow(){
+  const wrap = document.getElementById("productosWrap");
+  const idx = productoIdx++;
+  const row = document.createElement("div");
+  row.className = "prod-row";
+  row.id = "prow_"+idx;
+  row.innerHTML = `
+    <input type="text" placeholder="Producto" id="p_nombre_${idx}">
+    <input type="number" placeholder="Dosis" id="p_dosis_${idx}" step="any">
+    <select id="p_unidad_${idx}">
+      <option>L/ha</option><option>cc/ha</option><option>g/ha</option><option>kg/ha</option><option>cc/100L agua</option>
+    </select>
+    <button type="button" class="rm-btn" onclick="document.getElementById('prow_${idx}').remove()">✕</button>
+  `;
+  wrap.appendChild(row);
+}
+addProductoRow(); addProductoRow(); addProductoRow();
+
+function calcularCaldo(){
+  const ha = parseFloat(document.getElementById("m_superficie").value)||0;
+  const lha = parseFloat(document.getElementById("m_volumenha").value)||0;
+  const volTotal = ha*lha;
+  document.getElementById("m_volTotalHint").textContent = volTotal>0
+    ? "Volumen total de caldo: " + volTotal.toLocaleString("es-UY") + " L"
+    : "";
+
+  const rows = document.querySelectorAll("#productosWrap .prod-row");
+  let html = "";
+  rows.forEach(r=>{
+    const idx = r.id.split("_")[1];
+    const nombre = document.getElementById("p_nombre_"+idx).value.trim();
+    const dosis = parseFloat(document.getElementById("p_dosis_"+idx).value)||0;
+    const unidad = document.getElementById("p_unidad_"+idx).value;
+    if(!nombre || dosis<=0) return;
+    let total, totalUnidad;
+    if(unidad==="cc/100L agua"){
+      total = dosis * (volTotal/100);
+      totalUnidad = "cc";
+    }else{
+      total = dosis * ha;
+      totalUnidad = unidad.split("/")[0];
+    }
+    html += `<div class="result-row"><span>${nombre} (${dosis} ${unidad})</span><b>${total.toLocaleString("es-UY",{maximumFractionDigits:2})} ${totalUnidad}</b></div>`;
+  });
+  document.getElementById("caldoResultado").innerHTML = html
+    ? `<div class="card" style="margin-top:12px;">${html}</div>`
+    : `<div class="hint" style="margin-top:10px;">Cargá al menos un producto con nombre y dosis para calcular.</div>`;
+}
+
+function calcularTanda(){
+  const ha = parseFloat(document.getElementById("m_superficie").value)||0;
+  const lha = parseFloat(document.getElementById("m_volumenha").value)||0;
+  const volTotal = ha*lha;
+  const tanda = parseFloat(document.getElementById("m_tanda").value)||0;
+  const box = document.getElementById("tandaResultado");
+  if(volTotal<=0 || tanda<=0){
+    box.innerHTML = `<div class="hint" style="margin-top:10px;">Completá superficie, volumen por hectárea y tamaño de tanda.</div>`;
+    return;
+  }
+  const nTandas = volTotal/tanda;
+  const factor = tanda/volTotal;
+  let html = `<div class="result-row"><span>Cantidad de tandas</span><b>${nTandas.toLocaleString("es-UY",{maximumFractionDigits:2})}</b></div>`;
+  document.querySelectorAll("#productosWrap .prod-row").forEach(r=>{
+    const idx = r.id.split("_")[1];
+    const nombre = document.getElementById("p_nombre_"+idx).value.trim();
+    const dosis = parseFloat(document.getElementById("p_dosis_"+idx).value)||0;
+    const unidad = document.getElementById("p_unidad_"+idx).value;
+    if(!nombre || dosis<=0) return;
+    let totalProducto, totalUnidad;
+    if(unidad==="cc/100L agua"){ totalProducto = dosis*(volTotal/100); totalUnidad="cc"; }
+    else{ totalProducto = dosis*ha; totalUnidad = unidad.split("/")[0]; }
+    const porTanda = totalProducto*factor;
+    html += `<div class="result-row"><span>${nombre} por tanda</span><b>${porTanda.toLocaleString("es-UY",{maximumFractionDigits:2})} ${totalUnidad}</b></div>`;
+  });
+  box.innerHTML = `<div class="card" style="margin-top:12px;">${html}</div>`;
+}
+
+/* ==========================================================
+   EQUIPO — carga de trabajo por operador
+   ========================================================== */
+function renderEquipo(){
+  const hoy = new Date();
+  const mesActual = todayStr().slice(0,7); // "YYYY-MM"
+  const completadas = STORE.ordenes.filter(o=>o.fin && o.fecha && o.fecha.slice(0,7)===mesActual);
+
+  const porOperador = {};
+  completadas.forEach(o=>{
+    const nombre = o.operador || "Sin identificar";
+    if(!porOperador[nombre]) porOperador[nombre] = { ha:0, trabajos:0 };
+    porOperador[nombre].ha += (o.superficie||0);
+    porOperador[nombre].trabajos += 1;
+  });
+
+  const ranking = Object.entries(porOperador).sort((a,b)=> b[1].ha - a[1].ha);
+  const el = document.getElementById("equipoList");
+  el.innerHTML = ranking.length===0
+    ? `<div class="empty"><b>Todavía no hay trabajos terminados este mes.</b>Cuando se marque "Terminamos" en una orden, va a sumar acá.</div>`
+    : ranking.map(([nombre,d],i)=>`
+        <div class="card">
+          <div class="card-row">
+            <span class="dot ${i===0?'ok':'grey'}"></span>
+            <div>
+              <div class="card-title">${nombre}</div>
+              <div class="card-sub">${d.trabajos} trabajo${d.trabajos>1?"s":""} terminado${d.trabajos>1?"s":""}</div>
+            </div>
+          </div>
+          <div class="card-meta" style="font-size:14px; font-weight:700; color:var(--green); margin-top:8px;">${d.ha.toLocaleString("es-UY",{maximumFractionDigits:1})} ha</div>
+        </div>
+      `).join("");
+
+  const mi = document.getElementById("miSesionCard");
+  mi.innerHTML = `
+    <div class="card-title">${currentOperadorNombre()}</div>
+    <div class="card-sub">${auth.currentUser ? auth.currentUser.email : ""}</div>
+    <button class="btn btn-outline btn-block" style="margin-top:12px;" onclick="cerrarSesion()">Cerrar sesión</button>
+  `;
+}
+
+
+const EQUIPOS_REPORTE = ["XAG P150","DJI Mavic 3M","Generador grande","Camión KIA 4x4","Zorra","Batería","Otro"];
+
+function openReporte(){
+  const modal = document.getElementById("formModal");
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Reportar problema</h1>
+    <label class="field-label" style="margin-top:0;">Equipo</label>
+    <select id="r_equipo">${EQUIPOS_REPORTE.map(e=>`<option>${e}</option>`).join("")}</select>
+    <label class="field-label">Qué pasó</label>
+    <textarea id="r_detalle" placeholder="Describí el problema" style="min-height:70px;"></textarea>
+    <label class="field-label">Estado</label>
+    <select id="r_estado">
+      <option>Puede continuar</option>
+      <option>Puede continuar con observación</option>
+      <option>Equipo detenido</option>
+    </select>
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="guardarReporte()">Guardar reporte</button>
+  `;
+  document.getElementById("formOverlay").classList.add("show");
+}
+
+function guardarReporte(){
+  const detalle = document.getElementById("r_detalle").value.trim();
+  if(!detalle){ showToast("Contá qué pasó antes de guardar"); return; }
+  const reporte = {
+    fecha: todayStr(),
+    operador: currentOperadorNombre(),
+    equipo: document.getElementById("r_equipo").value,
+    detalle,
+    estado: document.getElementById("r_estado").value,
+    createdAt: serverTimestamp()
+  };
+  closeForm();
+  addDoc(collection(db,"reportes"), reporte)
+    .then(()=> showToast("Reporte guardado"))
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+/* cerrar modales tocando el fondo */
+
+function openDetail(id){
+  const it = STORE.checklists.find(c=>c.id===id);
+  if(!it) return;
+  const modal = document.getElementById("detailModal");
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="document.getElementById('detailOverlay').classList.remove('show')">‹ Cerrar</button>
+    <h1 class="page-title">${EQUIPOS[it.tipo].label} — ${it.equipo}</h1>
+    <div class="card">
+      <div class="card-meta">Fecha: ${fmtDate(it.fecha)} ${it.realizador ? " · Realizado por: "+it.realizador : ""}</div>
+      ${it.unidad ? `<div class="card-meta">${it.unidad === "km" ? "Kilómetros" : "Horas"} actuales: ${it.actuales} · Último service: ${it.ultimoService}</div>` : ""}
+      <div class="card-meta">Próximo chequeo: ${fmtDate(it.proximoChequeo)}</div>
+    </div>
+    <div class="section-divider">Puntos revisados</div>
+    ${it.puntos.map(p=>`
+      <div class="point">
+        <div class="point-name">${p.nombre}
+          <span class="pill ${p.estado==='OK'?'ok':p.estado==='X'?'bad':'nc'}" style="margin-left:6px;">${p.estado}</span>
+        </div>
+        ${p.observaciones ? `<div class="hint">${p.observaciones}</div>` : ""}
+        ${p.plazo && p.plazo!=="Sin corrección" ? `<div class="hint">Plazo de corrección: ${p.plazo}</div>` : ""}
+      </div>
+    `).join("")}
+  `;
+  document.getElementById("detailOverlay").classList.add("show");
+}
+
+/* cerrar modales tocando el fondo */
+document.getElementById("formOverlay").addEventListener("click", e=>{ if(e.target.id==="formOverlay") closeForm(); });
+document.getElementById("detailOverlay").addEventListener("click", e=>{ if(e.target.id==="detailOverlay") e.currentTarget.classList.remove("show"); });
+
+renderHoy();
+renderTrabajo();
+
+/* ---------- exponer funciones usadas por atributos onclick/onchange del HTML ----------
+   (necesario porque el script es un módulo ES: sus declaraciones no son globales) */
+Object.assign(window, {
+  showView, openForm, closeForm, setEstado, saveChecklist,
+  openDetail, guardarOrden, renderRegistro, marcarHito, evaluarCondiciones,
+  addProductoRow, calcularCaldo, calcularTanda, openReporte, guardarReporte,
+  mostrarTab, hacerLogin, hacerRegistro, cerrarSesion
+});
+</script>
+</body>
+</html>
