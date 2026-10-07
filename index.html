@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B3358">
+<title>PGAgro — Chequeos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --ink:#16223A;
+    --green:#1B3358;
+    --sage:#5C7FA6;
+    --amber:#E4BE7A;
+    --paper:#EDF1F6;
+    --bg:#F6F8FA;
+    --ok:#4C7156;
+    --warn:#C98A2E;
+    --bad:#B4442E;
+    --line:#D7DEE6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Poppins', 'Helvetica Neue', Arial, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-bottom:78px;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:var(--green);
+    color:var(--paper);
+    padding:calc(16px + env(safe-area-inset-top)) 18px 14px;
+    display:flex; align-items:center; gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);
+  }
+  header .icon{width:34px; height:34px; flex:0 0 auto;}
+  header .brand{display:flex; flex-direction:column; line-height:1.05;}
+  header .brand b{font-weight:800; font-size:19px;}
+  header .brand span{font-weight:500; font-size:12px; color:var(--amber); letter-spacing:.4px;}
+  header .today{margin-left:auto; text-align:right; font-size:11px; color:var(--paper); opacity:.85;}
+
+  /* ---------- Views ---------- */
+  main{flex:1; padding:16px 16px 8px;}
+  .view{display:none; animation:fade .18s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h1.page-title{font-size:15px; font-weight:700; margin:4px 0 14px; color:var(--green); letter-spacing:.2px;}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--paper);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:12px;
+    border:1px solid var(--line);
+  }
+  .card-row{display:flex; align-items:center; gap:12px;}
+  .card-row .dot{width:11px; height:11px; border-radius:50%; flex:0 0 auto;}
+  .dot.ok{background:var(--ok);}
+  .dot.warn{background:var(--warn);}
+  .dot.bad{background:var(--bad);}
+  .dot.grey{background:#A9B4C2;}
+  .card-title{font-weight:700; font-size:15px; color:var(--ink);}
+  .card-sub{font-size:12.5px; color:#4A5568; margin-top:2px;}
+  .card-meta{font-size:11.5px; color:#7A8699; margin-top:6px;}
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    border-radius:12px; font-family:inherit; font-weight:600; font-size:13.5px;
+    padding:11px 16px; letter-spacing:.2px;
+    transition:transform .05s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--green); color:var(--paper); width:100%;}
+  .btn-outline{background:transparent; color:var(--green); border:1.5px solid var(--green); width:100%;}
+  .btn-amber{background:var(--amber); color:var(--ink); width:100%;}
+  .btn-small{padding:8px 12px; font-size:12.5px; border-radius:10px;}
+  .btn-block{display:block; width:100%; margin-top:10px;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  /* ---------- Equipment tiles (Chequeos tab) ---------- */
+  .tile{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px;
+    padding:16px; margin-bottom:12px; display:flex; align-items:center; gap:14px;
+    cursor:pointer;
+  }
+  .tile .tile-ico{
+    width:44px; height:44px; border-radius:12px; background:var(--green);
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+    color:var(--amber); font-size:20px;
+  }
+  .tile .tile-txt b{display:block; font-size:14.5px; color:var(--ink);}
+  .tile .tile-txt span{font-size:12px; color:#5C7FA6;}
+  .tile .chev{margin-left:auto; color:var(--sage); font-size:18px;}
+
+  /* ---------- Forms ---------- */
+  label.field-label{display:block; font-size:12px; font-weight:600; color:var(--green); margin:14px 0 5px;}
+  input[type=text], input[type=date], input[type=number], select, textarea{
+    width:100%; font-family:inherit; font-size:14px; color:var(--ink);
+    background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:10px 12px;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--sage); outline-offset:1px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .hint{font-size:11px; color:#7A8699; margin-top:4px;}
+
+  .point{
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; background:#fff;
+  }
+  .point-name{font-weight:600; font-size:13.5px; margin-bottom:8px;}
+  .seg{display:flex; gap:6px; margin-bottom:8px;}
+  .seg button{
+    flex:1; border:1.5px solid var(--line); background:#fff; border-radius:9px;
+    padding:8px 0; font-family:inherit; font-weight:700; font-size:13px; color:#7A8699; cursor:pointer;
+  }
+  .seg button.on-ok{background:var(--ok); border-color:var(--ok); color:#fff;}
+  .seg button.on-x{background:var(--bad); border-color:var(--bad); color:#fff;}
+  .seg button.on-nc{background:#A9B4C2; border-color:#A9B4C2; color:#fff;}
+  .point textarea{min-height:38px; resize:vertical; font-size:13px;}
+  .point .plazo{margin-top:8px;}
+
+  .section-divider{
+    font-size:11px; font-weight:700; color:var(--sage); text-transform:uppercase;
+    letter-spacing:.6px; margin:20px 0 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600;
+    color:var(--green); background:none; border:none; cursor:pointer; padding:0 0 12px; font-family:inherit;
+  }
+
+  /* ---------- Historial ---------- */
+  .hist-item{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:13px 15px; margin-bottom:10px; cursor:pointer;
+  }
+  .hist-item .hi-top{display:flex; justify-content:space-between; align-items:center;}
+  .hist-item b{font-size:14px;}
+  .hist-item .hi-date{font-size:11.5px; color:#7A8699;}
+  .hist-item .hi-summary{font-size:12px; color:#4A5568; margin-top:4px;}
+  .pill{
+    display:inline-block; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:20px; margin-right:4px;
+  }
+  .pill.ok{background:rgba(76,113,86,.15); color:var(--ok);}
+  .pill.bad{background:rgba(180,68,46,.15); color:var(--bad);}
+  .pill.nc{background:rgba(139,138,124,.18); color:#5A6478;}
+
+  .empty{
+    text-align:center; padding:36px 20px; color:#7A8699; font-size:13px;
+  }
+  .empty b{display:block; color:var(--ink); font-size:14px; margin-bottom:4px;}
+
+  /* ---------- Bottom nav ---------- */
+  nav.tabbar{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px; background:#fff; border-top:1px solid var(--line);
+    display:flex; z-index:30;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav.tabbar button{
+    flex:1; background:none; border:none; font-family:inherit; cursor:pointer;
+    padding:9px 2px 7px; display:flex; flex-direction:column; align-items:center; gap:2px;
+    color:#A9B4C2; font-size:9.3px; font-weight:600;
+  }
+  nav.tabbar button .ic{font-size:17px; line-height:1;}
+  nav.tabbar button.active{color:var(--green);}
+
+  .alert-card{
+    background:#FBEAE6; border:1px solid #E7B7A8; border-radius:14px; padding:13px 15px; margin-bottom:12px;
+  }
+  .alert-card b{font-size:13.5px; color:var(--bad); display:block; margin-bottom:2px;}
+  .alert-card span{font-size:12px; color:#7A4436;}
+
+  .prod-row{display:grid; grid-template-columns:1.3fr .8fr 1fr auto; gap:6px; align-items:center; margin-bottom:8px;}
+  .prod-row select, .prod-row input{font-size:12.5px; padding:8px 8px;}
+  .rm-btn{
+    background:none; border:none; color:var(--bad); font-size:18px; cursor:pointer; padding:0 4px;
+  }
+  .result-row{
+    display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px dashed var(--line);
+  }
+  .result-row:last-child{border-bottom:none;}
+  .order-list-num{
+    counter-reset:carga;
+  }
+  .order-list-num li{
+    counter-increment:carga;
+    list-style:none; position:relative; padding-left:26px; margin-bottom:6px; font-size:13px;
+  }
+  .order-list-num li::before{
+    content:counter(carga); position:absolute; left:0; top:-1px;
+    background:var(--sage); color:#fff; width:19px; height:19px; border-radius:50%;
+    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .dt-result{
+    border-radius:14px; padding:14px; margin-top:10px; font-size:13px;
+  }
+  .dt-result.ok{background:rgba(76,113,86,.13); color:var(--ok);}
+  .dt-result.warn{background:rgba(201,138,46,.15); color:var(--warn);}
+  .dt-result.bad{background:rgba(180,68,46,.13); color:var(--bad);}
+  .dt-result b{display:block; font-size:14.5px; margin-bottom:3px;}
+  .quick-actions{display:flex; gap:10px; margin-bottom:14px;}
+  .op-log{display:flex; gap:8px; margin:10px 0;}
+  .op-log button{flex:1;}
+  .op-log .done{background:var(--sage); color:#fff; border:1.5px solid var(--sage);}
+  .orden-mini{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin-bottom:8px; font-size:12.5px;
+  }
+  .orden-mini b{font-size:13.5px; display:block;}
+  .orden-mini .om-meta{color:#7A8699; margin-top:2px;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(31,42,34,.45); z-index:50;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--bg); width:100%; max-width:480px; border-radius:20px 20px 0 0;
+    padding:20px 18px 26px; max-height:88vh; overflow-y:auto;
+  }
+  .modal-handle{width:38px; height:4px; background:var(--line); border-radius:3px; margin:0 auto 14px;}
+
+  .toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); padding:10px 18px; border-radius:30px;
+    font-size:12.5px; font-weight:600; z-index:60; opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .toast.show{opacity:1;}
+  /* ---------- Inicio (home) ---------- */
+  .hero{
+    background:linear-gradient(160deg,var(--green) 0%, #12264A 100%);
+    color:var(--paper); border-radius:20px; padding:26px 20px 22px; text-align:center;
+    margin-bottom:16px; position:relative; overflow:hidden;
+  }
+  .hero svg{width:104px; height:104px; display:block; margin:0 auto 8px;}
+  .hero .h-name{font-weight:800; font-size:30px; letter-spacing:.3px; line-height:1;}
+  .hero .h-name span{color:var(--amber); font-weight:500;}
+  .hero .h-tag{margin-top:8px; font-size:11.5px; font-weight:600; letter-spacing:2.2px; text-transform:uppercase; color:var(--amber);}
+  .hero .h-sub{margin-top:4px; font-size:12px; opacity:.8;}
+  .stat-title{font-size:11px; font-weight:700; color:var(--sage); text-transform:uppercase; letter-spacing:.7px; margin:18px 2px 8px;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:14px 14px 12px; cursor:pointer;
+    text-align:left; font-family:inherit; color:var(--ink); display:flex; flex-direction:column; justify-content:flex-start; align-items:flex-start;
+  }
+  .stat.full{grid-column:1 / -1;}
+  .stat .n{font-size:30px; font-weight:800; line-height:1; color:var(--green);}
+  .stat .l{font-size:12.5px; font-weight:600; margin-top:6px;}
+  .stat .s{font-size:11px; color:#7A8699; margin-top:2px;}
+  .stat.warn .n{color:var(--warn);}
+  .stat.bad .n{color:var(--bad);}
+  .stat.ok .n{color:var(--ok);}
+  .home-actions{display:grid; gap:10px; margin-top:18px;}
+
+  /* ---------- Informes ---------- */
+  .inf-item{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:13px 15px; margin-bottom:10px;}
+  .inf-item .hi-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .inf-item b{font-size:14px;}
+  .inf-actions{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .inf-actions .btn{width:auto; flex:1 1 auto; min-width:30%;}
+  .btn-ghost{background:#fff; color:var(--green); border:1.5px solid var(--line);}
+  .btn-danger{background:#fff; color:var(--bad); border:1.5px solid #E7B7A8;}
+  .pill.warn{background:rgba(201,138,46,.17); color:var(--warn);}
+  .sigbox{border:1.5px solid var(--line); border-radius:10px; background:#fff; touch-action:none; display:block; width:100%; height:110px;}
+  .seg-filter{display:flex; gap:6px; margin-bottom:12px;}
+  .seg-filter button{flex:1; border:1.5px solid var(--line); background:#fff; border-radius:10px; padding:8px 0; font-family:inherit; font-weight:600; font-size:12px; color:#7A8699; cursor:pointer;}
+  .seg-filter button.on{background:var(--green); border-color:var(--green); color:var(--paper);}
+  input[type=time]{width:100%; font-family:inherit; font-size:14px; color:var(--ink); background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px;}
+  .inf-item .hi-date{font-size:11.5px; color:#7A8699; white-space:nowrap;}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+</head>
+<body>
+<div id="app">
+
+  <div id="loginScreen" style="position:fixed; inset:0; z-index:100; background:var(--green); display:flex; align-items:center; justify-content:center; padding:24px;">
+    <div style="max-width:340px; width:100%;">
+      <svg viewBox="0 0 120 120" width="60" height="60" style="display:block; margin:0 auto 10px;">
+        <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+        <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+        <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+      </svg>
+      <div style="text-align:center; color:var(--paper); font-weight:800; font-size:20px; margin-bottom:2px;">PG<span style="color:var(--amber); font-weight:500;">Agro</span></div>
+      <div style="text-align:center; color:var(--amber); font-size:12px; margin-bottom:22px;">Chequeos de equipos</div>
+
+      <div style="background:var(--paper); border-radius:16px; padding:18px;">
+        <div style="display:flex; gap:6px; margin-bottom:14px;">
+          <button type="button" id="tabLogin" class="btn btn-small" style="flex:1; background:var(--green); color:var(--paper);" onclick="mostrarTab('login')">Iniciar sesión</button>
+          <button type="button" id="tabRegistro" class="btn btn-small" style="flex:1; background:transparent; color:var(--green); border:1.5px solid var(--green);" onclick="mostrarTab('registro')">Crear cuenta</button>
+        </div>
+
+        <div id="bloqueLogin">
+          <label class="field-label" style="margin-top:0;">Email</label>
+          <input type="text" id="li_email" placeholder="tu@email.com">
+          <label class="field-label">Contraseña</label>
+          <input type="password" id="li_pass" placeholder="••••••••">
+          <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="hacerLogin()">Entrar</button>
+        </div>
+
+        <div id="bloqueRegistro" style="display:none;">
+          <label class="field-label" style="margin-top:0;">Nombre y apellido</label>
+          <input type="text" id="re_nombre" placeholder="Como te van a ver en la app">
+          <label class="field-label">Email</label>
+          <input type="text" id="re_email" placeholder="tu@email.com">
+          <label class="field-label">Contraseña</label>
+          <input type="password" id="re_pass" placeholder="Mínimo 6 caracteres">
+          <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="hacerRegistro()">Crear cuenta y entrar</button>
+        </div>
+
+        <div id="loginError" class="hint" style="color:#B4442E; margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gateScreen" style="display:none; position:fixed; inset:0; z-index:90; background:var(--green); align-items:center; justify-content:center; padding:24px;">
+    <div style="max-width:340px; width:100%; background:var(--paper); border-radius:16px; padding:22px; text-align:center;">
+      <div style="font-weight:800; font-size:18px; color:var(--green);" id="gateTitulo"></div>
+      <div class="hint" style="font-size:12.5px; margin:10px 0 14px; color:#4A5568;" id="gateTexto"></div>
+      <div id="gateBotones"></div>
+      <button class="btn btn-ghost btn-block" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </div>
+
+  <div id="mainScreen" style="display:none;">
+
+  <header>
+    <svg class="icon" viewBox="0 0 120 120">
+      <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+      <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+      <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+    </svg>
+    <div class="brand">
+      <b>PG<span style="color:var(--amber); font-weight:500;">Agro</span></b>
+      <span>Chequeos e informes</span>
+    </div>
+    <div class="today">
+      <div id="connStatus" style="font-size:10px; margin-bottom:2px;">🟡 Conectando…</div>
+      <div id="todayLabel"></div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===================== INICIO ===================== -->
+    <section class="view active" id="view-inicio">
+      <div class="hero">
+        <svg viewBox="0 0 120 120">
+          <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+          <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+          <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+        </svg>
+        <div class="h-name">PG<span>Agro</span></div>
+        <div class="h-tag">Precisión y calidad</div>
+        <div class="h-sub">Chequeos de equipos e informes de aplicación</div>
+      </div>
+
+      <div id="homeAlerts"></div>
+
+      <div class="stat-title">Chequeos</div>
+      <div class="stats">
+        <button class="stat" id="st_chq_pend" onclick="showView('chequeos')"></button>
+        <button class="stat" id="st_chq_real" onclick="showView('historial')"></button>
+      </div>
+
+      <div class="stat-title">Problemas</div>
+      <div class="stats">
+        <button class="stat" id="st_prob_rep" onclick="showView('historial')"></button>
+        <button class="stat" id="st_prob_res" onclick="showView('historial')"></button>
+      </div>
+
+      <div class="stat-title">Informes al cliente</div>
+      <div class="stats">
+        <button class="stat full" id="st_inf_pend" onclick="showView('informes')"></button>
+      </div>
+
+      <div class="home-actions">
+        <button class="btn btn-primary" onclick="showView('chequeos')">✅ Checklist de salida</button>
+        <button class="btn btn-amber" onclick="openInforme()">📄 Nuevo informe de aplicación</button>
+        <button class="btn btn-outline" style="border-color:var(--bad); color:var(--bad);" onclick="openReporte()">⚠ Reportar problema</button>
+        <button class="btn btn-ghost" id="btnOperadores" style="display:none;" onclick="openOperadores()">👥 Operadores habilitados</button>
+      </div>
+    </section>
+
+    <!-- ===================== CHEQUEOS (checklist de salida) ===================== -->
+    <section class="view" id="view-chequeos">
+      <h1 class="page-title">Checklist de salida · todo listo para empezar a trabajar</h1>
+      <div id="reportAlerts"></div>
+      <div id="hoyList"></div>
+      <button class="btn btn-outline" style="border-color:var(--bad); color:var(--bad); margin-top:4px;" onclick="openReporte()">⚠ Reportar problema</button>
+    </section>
+
+    <!-- ===================== HISTORIAL ===================== -->
+    <section class="view" id="view-historial">
+      <h1 class="page-title">Historial de chequeos</h1>
+      <div id="histList"></div>
+      <div class="section-divider">Problemas reportados</div>
+      <div id="reportesList"></div>
+    </section>
+
+    <!-- ===================== INFORMES ===================== -->
+    <section class="view" id="view-informes">
+      <h1 class="page-title">Informes de aplicación</h1>
+      <button class="btn btn-primary" style="margin-bottom:12px;" onclick="openInforme()">＋ Nuevo informe</button>
+      <div class="seg-filter" id="infFiltro">
+        <button data-f="pend" class="on" onclick="setFiltroInf('pend')">Pendientes</button>
+        <button data-f="env" onclick="setFiltroInf('env')">Enviados</button>
+        <button data-f="todos" onclick="setFiltroInf('todos')">Todos</button>
+      </div>
+      <div id="informesList"></div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="inicio" onclick="showView('inicio')"><span class="ic">🏠</span>INICIO</button>
+    <button class="tab-btn" data-view="chequeos" onclick="showView('chequeos')"><span class="ic">✅</span>CHEQUEOS</button>
+    <button class="tab-btn" data-view="historial" onclick="showView('historial')"><span class="ic">🕘</span>HISTORIAL</button>
+    <button class="tab-btn" data-view="informes" onclick="showView('informes')"><span class="ic">📄</span>INFORMES</button>
+  </nav>
+
+
+  <div class="modal-overlay" id="formOverlay">
+    <div class="modal" id="formModal"></div>
+  </div>
+
+  <div class="modal-overlay" id="detailOverlay">
+    <div class="modal" id="detailModal"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  </div><!-- /mainScreen -->
+</div>
+
+<script type="module">
+/* =========================================================
+   PGAgro · Chequeos — CONFIGURACIÓN DE FIREBASE
+   =========================================================
+   Para que todos los operadores vean los mismos datos, esta
+   app usa Firebase (Firestore) como base de datos compartida
+   en tiempo real, gratis para este volumen de uso.
+
+   PASOS (una sola vez):
+   1. Anda a https://console.firebase.google.com → "Agregar proyecto"
+      → ponele un nombre (ej. "pgagro-chequeos") → creá el proyecto.
+   2. En el menú izquierdo: "Compilación" → "Firestore Database"
+      → "Crear base de datos" → modo producción → elegí una región
+      (ej. southamerica-east1) → Habilitar.
+   3. Andá a "Reglas" (dentro de Firestore) y pegá el bloque de
+      reglas que te paso más abajo en el chat → Publicar.
+   4. En el menú izquierdo: "Compilación" → "Authentication"
+      → "Comenzar" → pestaña "Sign-in method" → habilitá "Anónimo".
+   5. Anda al ícono de engranaje (arriba a la izquierda) →
+      "Configuración del proyecto" → bajá hasta "Tus apps" →
+      ícono </> (Web) → registrá una app (cualquier nombre) →
+      copiá el objeto "firebaseConfig" que te muestra.
+   6. Pegá ese objeto acá abajo, reemplazando el de ejemplo.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBwI0QRf9LPsyAPqvwIvQrM3YuQ2Yf5I-M",
+  authDomain: "pgagro---checklist.firebaseapp.com",
+  projectId: "pgagro---checklist",
+  storageBucket: "pgagro---checklist.firebasestorage.app",
+  messagingSenderId: "777651668678",
+  appId: "1:777651668678:web:74cfdf4daba2b3468d79c7"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, updateDoc, setDoc, deleteDoc, doc, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  updateProfile, signOut, sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+const fbApp = initializeApp(firebaseConfig);
+// Caché local persistente: si en el campo no hay señal, los datos cargados quedan
+// guardados en el celular y se sincronizan solos cuando vuelve la conexión.
+let db;
+try{
+  db = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+}catch(e){
+  console.warn("Caché persistente no disponible, uso modo normal:", e);
+  db = getFirestore(fbApp);
+}
+const auth = getAuth(fbApp);
+
+/* Con poca señal, la promesa de escritura de Firestore no se resuelve hasta que el
+   servidor confirma. Esperamos como máximo 3 s: la escritura ya quedó en cola local. */
+function confirmarEscritura(p){
+  return Promise.race([
+    p.then(()=>true),
+    new Promise(res=>setTimeout(()=>res(false), 3000))
+  ]);
+}
+function nuevoId(col){ return doc(collection(db,col)); }
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+const connEl = () => document.getElementById("connStatus");
+
+function currentOperadorNombre(){
+  const u = auth.currentUser;
+  if(!u) return "Desconocido";
+  return u.displayName || u.email;
+}
+
+/* Acceso cerrado: solo entran los administradores y los operadores habilitados.
+   (Los mismos criterios se hacen cumplir en las reglas de Firestore.) */
+const ADMINS = ["mngonbar@gmail.com"];
+let unsubAcceso = null, ES_ADMIN = false;
+const emailDe = u => (u.email||"").toLowerCase();
+
+function mostrarGate(titulo, texto, botonesHTML){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("mainScreen").style.display = "none";
+  document.getElementById("gateTitulo").textContent = titulo;
+  document.getElementById("gateTexto").textContent = texto;
+  document.getElementById("gateBotones").innerHTML = botonesHTML || "";
+  document.getElementById("gateScreen").style.display = "flex";
+}
+
+function entrarApp(){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("gateScreen").style.display = "none";
+  document.getElementById("mainScreen").style.display = "block";
+  if(connEl()) connEl().textContent = "🟢 " + currentOperadorNombre();
+  document.getElementById("btnOperadores").style.display = ES_ADMIN ? "block" : "none";
+  iniciarEscuchas();
+  refrescarVistaActual();
+}
+
+onAuthStateChanged(auth, (user)=>{
+  if(unsubAcceso){ unsubAcceso(); unsubAcceso = null; }
+  ES_ADMIN = false;
+  if(!user){
+    document.getElementById("gateScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("mainScreen").style.display = "none";
+    return;
+  }
+  if(!user.emailVerified){
+    mostrarGate("Verificá tu email",
+      "Te enviamos un mensaje a " + user.email + ". Abrilo, tocá el enlace y después volvé acá. Si no lo ves, revisá spam.",
+      `<button class="btn btn-primary btn-block" onclick="yaVerifique()">Ya verifiqué</button>
+       <button class="btn btn-outline btn-block" onclick="reenviarVerificacion()">Reenviar email</button>`);
+    return;
+  }
+  ES_ADMIN = ADMINS.includes(emailDe(user));
+  if(ES_ADMIN){ entrarApp(); return; }
+  mostrarGate("Verificando acceso…", "", "");
+  unsubAcceso = onSnapshot(doc(db,"operadores",emailDe(user)), (snap)=>{
+    if(snap.exists()) entrarApp();
+    else mostrarGate("Acceso no habilitado",
+      "Tu cuenta (" + user.email + ") todavía no está habilitada. Pedile a María Noel que te agregue desde Inicio → Operadores habilitados y volvé a abrir la app.", "");
+  }, ()=>{
+    mostrarGate("Acceso no habilitado",
+      "No se pudo confirmar el acceso de " + user.email + ". Pedile a María Noel que te habilite.", "");
+  });
+});
+
+async function yaVerifique(){
+  try{
+    await auth.currentUser.reload();
+    if(auth.currentUser.emailVerified){ location.reload(); }
+    else showToast("Todavía no figura como verificado");
+  }catch(e){ showToast("No se pudo comprobar — revisá la conexión"); }
+}
+async function reenviarVerificacion(){
+  try{ await sendEmailVerification(auth.currentUser); showToast("Email reenviado"); }
+  catch(e){ showToast("Esperá un momento antes de reenviar"); }
+}
+
+function mostrarTab(tab){
+  const esLogin = tab==="login";
+  document.getElementById("bloqueLogin").style.display = esLogin ? "block" : "none";
+  document.getElementById("bloqueRegistro").style.display = esLogin ? "none" : "block";
+  document.getElementById("tabLogin").style.background = esLogin ? "var(--green)" : "transparent";
+  document.getElementById("tabLogin").style.color = esLogin ? "var(--paper)" : "var(--green)";
+  document.getElementById("tabRegistro").style.background = esLogin ? "transparent" : "var(--green)";
+  document.getElementById("tabRegistro").style.color = esLogin ? "var(--green)" : "var(--paper)";
+  document.getElementById("loginError").textContent = "";
+}
+
+function traducirErrorAuth(codigo){
+  const mapa = {
+    "auth/invalid-email":"El email no es válido.",
+    "auth/user-not-found":"No existe una cuenta con ese email.",
+    "auth/wrong-password":"Contraseña incorrecta.",
+    "auth/invalid-credential":"Email o contraseña incorrectos.",
+    "auth/email-already-in-use":"Ya existe una cuenta con ese email — iniciá sesión en vez de crear una nueva.",
+    "auth/weak-password":"La contraseña necesita al menos 6 caracteres."
+  };
+  return mapa[codigo] || "No se pudo completar la operación. Revisá los datos e intentá de nuevo.";
+}
+
+function hacerLogin(){
+  const email = document.getElementById("li_email").value.trim();
+  const pass = document.getElementById("li_pass").value;
+  document.getElementById("loginError").textContent = "";
+  signInWithEmailAndPassword(auth, email, pass)
+    .catch(err=>{ document.getElementById("loginError").textContent = traducirErrorAuth(err.code); });
+}
+
+function hacerRegistro(){
+  const nombre = document.getElementById("re_nombre").value.trim();
+  const email = document.getElementById("re_email").value.trim();
+  const pass = document.getElementById("re_pass").value;
+  document.getElementById("loginError").textContent = "";
+  if(!nombre){ document.getElementById("loginError").textContent = "Ingresá tu nombre y apellido."; return; }
+  createUserWithEmailAndPassword(auth, email, pass)
+    .then(cred => updateProfile(cred.user, { displayName: nombre }).then(()=>sendEmailVerification(cred.user)).then(()=>location.reload()))
+    .catch(err=>{ document.getElementById("loginError").textContent = traducirErrorAuth(err.code); });
+}
+
+function cerrarSesion(){
+  signOut(auth);
+}
+
+
+/* =========================================================
+   Configuración de la matriz de chequeos
+   Editá EQUIPOS para agregar/quitar puntos, cambiar
+   frecuencias o renombrar equipos.
+   ========================================================= */
+const EQUIPOS = {
+  vehiculo: {
+    label: "Vehículo",
+    unidad: "km",
+    frecuenciaDias: 30,
+    intervaloService: 10000,
+    idsSugeridos: ["Camión KIA 4x4"],
+    puntos: [
+      "Nivel de fluidos varios","Presión de neumáticos","Funcionamiento de luces",
+      "Tomas eléctricas a acoplados","Revisión de tiro","Revisión de frenos",
+      "Botiquín","Extintor","Herramientas","Auxiliar","Estado de neumáticos","Otros"
+    ]
+  },
+  acoplado: {
+    label: "Acoplado (zorra)",
+    unidad: null,
+    frecuenciaDias: 30,
+    intervaloService: null,
+    idsSugeridos: ["Zorra"],
+    puntos: [
+      "Enganche","Cubiertas","Cadenas y mosquetones","Ejes y masas","Luces",
+      "Puertas/Barandas/Chasis","Tanques y bombas","Engrasar válvulas","Conexiones eléctricas"
+    ]
+  },
+  dron: {
+    label: "Drones",
+    unidad: "horas",
+    frecuenciaDias: 7,
+    intervaloService: 100,
+    idsSugeridos: ["XAG P150","DJI Mavic 3M"],
+    puntos: [
+      "Hélices","Motores","Tren de aterrizaje","Sistema de pulverizado","Sistema de esparcido",
+      "Baterías (limpieza gral, pines y estado de carga)","Cargador","Conexiones eléctricas y fichas"
+    ]
+  },
+  generador: {
+    label: "Generador",
+    unidad: "horas",
+    frecuenciaDias: 30,
+    intervaloService: 100,
+    idsSugeridos: ["Generador grande"],
+    puntos: [
+      "Filtro de aire","Filtro de combustible","Nivel de líquido refrigerante",
+      "Nivel de aceite","Reemplazo de filtro de aceite"
+    ]
+  }
+};
+
+const PLAZOS = ["Sin corrección","Hoy","24 horas","3 días","7 días"];
+
+/* ---------- datos compartidos en tiempo real (Firestore) ---------- */
+let STORE = { checklists: [], reportes: [], informes: [] };
+
+function refrescarVistaActual(){
+  const activa = document.querySelector(".tab-btn.active");
+  const nombre = activa ? activa.dataset.view : "inicio";
+  if(nombre==="inicio") renderInicio();
+  if(nombre==="chequeos") renderChequeos();
+  if(nombre==="historial") renderHistorial();
+  if(nombre==="informes") renderInformes();
+}
+
+let escuchasIniciadas = false;
+function iniciarEscuchas(){
+  if(escuchasIniciadas) return;
+  escuchasIniciadas = true;
+  // Ordenamos en el cliente: si a algún documento le faltara "fecha", una consulta
+  // con orderBy lo excluiría en silencio.
+  const ordenar = (snap)=> snap.docs.map(d=>({ id:d.id, ...d.data() }))
+      .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
+
+  onSnapshot(collection(db,"checklists"), (snap)=>{
+    STORE.checklists = ordenar(snap); refrescarVistaActual();
+  }, err=>console.error("checklists:", err));
+
+  onSnapshot(collection(db,"reportes"), (snap)=>{
+    STORE.reportes = ordenar(snap); refrescarVistaActual();
+  }, err=>console.error("reportes:", err));
+
+  onSnapshot(collection(db,"informes"), (snap)=>{
+    STORE.informes = ordenar(snap); refrescarVistaActual();
+  }, err=>console.error("informes:", err));
+}
+
+function fmtDate(d){
+  if(!d) return "—";
+  const dt = new Date(d+"T00:00:00");
+  return dt.toLocaleDateString("es-UY",{day:"2-digit",month:"2-digit",year:"numeric"});
+}
+function todayStr(){
+  const d = new Date();
+  const m = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
+  return d.getFullYear()+"-"+m+"-"+dd;
+}
+function addDays(dateStr, days){
+  const d = new Date(dateStr+"T00:00:00");
+  d.setDate(d.getDate()+days);
+  const m = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
+  return d.getFullYear()+"-"+m+"-"+dd;
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+"T00:00:00") - new Date(a+"T00:00:00")) / 86400000);
+}
+
+document.getElementById("todayLabel").textContent = fmtDate(todayStr());
+
+/* ---------- navegación de tabs ---------- */
+function showView(name){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.view===name));
+  window.scrollTo({top:0});
+  if(name==="inicio") renderInicio();
+  if(name==="chequeos") renderChequeos();
+  if(name==="historial") renderHistorial();
+  if(name==="informes") renderInformes();
+}
+
+/* ---------- estado por tipo de equipo ---------- */
+function lastChecklistFor(tipo){
+  const items = STORE.checklists.filter(c=>c.tipo===tipo).sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  return items[0] || null;
+}
+
+function statusFor(tipo){
+  const last = lastChecklistFor(tipo);
+  if(!last) return {dot:"grey", label:"Sin registrar", next:null};
+  const hoy = todayStr();
+  const diff = daysBetween(hoy, last.proximoChequeo);
+  if(diff < 0) return {dot:"bad", label:"Vencido", next:last.proximoChequeo, last};
+  if(diff <= 3) return {dot:"warn", label:"Próximo a vencer", next:last.proximoChequeo, last};
+  return {dot:"ok", label:"Al día", next:last.proximoChequeo, last};
+}
+
+function problemasAbiertos(){ return STORE.reportes.filter(r=>!r.resuelto); }
+
+function alertasHTML(max){
+  let abiertos = problemasAbiertos();
+  const total = abiertos.length;
+  if(max) abiertos = abiertos.slice(0,max);
+  return abiertos.map(r=>`
+    <div class="alert-card">
+      <b>${esc(r.equipo)} · ${esc(r.estado)}</b>
+      <span>${esc(r.detalle)}</span>
+    </div>
+  `).join("") + (max && total>max ? `<div class="hint" style="margin:-4px 0 10px;">y ${total-max} más sin resolver — mirá el Historial.</div>` : "");
+}
+
+/* ---------- INICIO ---------- */
+function renderInicio(){
+  const tipos = Object.keys(EQUIPOS);
+  const pendientes = tipos.filter(t=>statusFor(t).dot!=="ok").length;
+  const mes = todayStr().slice(0,7);
+  const realizados = STORE.checklists.filter(c=>(c.fecha||"").startsWith(mes)).length;
+  const reportados = STORE.reportes.length;
+  const resueltos = STORE.reportes.filter(r=>r.resuelto).length;
+  const sinResolver = reportados - resueltos;
+  const infPend = STORE.informes.filter(i=>!i.enviado).length;
+
+  document.getElementById("homeAlerts").innerHTML = alertasHTML(3);
+
+  const set = (id, cls, n, l, s)=>{
+    const el = document.getElementById(id);
+    el.className = "stat" + (id==="st_inf_pend" ? " full" : "") + (cls ? " "+cls : "");
+    el.innerHTML = `<div class="n">${n}</div><div class="l">${l}</div><div class="s">${s}</div>`;
+  };
+  set("st_chq_pend", pendientes>0?"warn":"ok", pendientes, "Chequeos pendientes", "equipos sin chequeo al día (de "+tipos.length+")");
+  set("st_chq_real", "", realizados, "Chequeos realizados", "este mes");
+  set("st_prob_rep", sinResolver>0?"bad":"", reportados, "Problemas reportados", sinResolver+" sin resolver");
+  set("st_prob_res", "ok", resueltos, "Problemas resueltos", "en total");
+  set("st_inf_pend", infPend>0?"warn":"ok", infPend, "Informes pendientes de enviar", infPend>0 ? "para mandar al cliente al cierre del trabajo" : "todo enviado");
+}
+
+/* ---------- CHEQUEOS: checklist de salida ---------- */
+function renderChequeos(){
+  document.getElementById("reportAlerts").innerHTML = alertasHTML();
+
+  const el = document.getElementById("hoyList");
+  el.innerHTML = "";
+  Object.keys(EQUIPOS).forEach(tipo=>{
+    const cfg = EQUIPOS[tipo];
+    const st = statusFor(tipo);
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-row">
+        <span class="dot ${st.dot}"></span>
+        <div>
+          <div class="card-title">${cfg.label}</div>
+          <div class="card-sub">${st.label}${st.last ? " · " + esc(st.last.equipo) : ""}</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${st.last ? "Último chequeo: " + fmtDate(st.last.fecha) + " · Próximo: " + fmtDate(st.next) : "Todavía no se registró ningún chequeo."}
+      </div>
+      <button class="btn btn-primary btn-block" onclick="openForm('${tipo}')">Realizar chequeo</button>
+    `;
+    el.appendChild(card);
+  });
+}
+
+/* ---------- Formulario de chequeo ---------- */
+let currentTipo = null;
+
+function openForm(tipo){
+  currentTipo = tipo;
+  const cfg = EQUIPOS[tipo];
+  const modal = document.getElementById("formModal");
+
+  const unidadLabel = cfg.unidad === "km" ? "Kilómetros" : cfg.unidad === "horas" ? "Horas" : null;
+
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Chequeo de ${cfg.label.toLowerCase()}</h1>
+
+    <label class="field-label">Equipo</label>
+    <input type="text" id="f_equipo" list="dl_${tipo}" placeholder="Nombre o identificador">
+    <datalist id="dl_${tipo}">${cfg.idsSugeridos.map(x=>`<option value="${x}">`).join("")}</datalist>
+
+    <div class="row2">
+      <div>
+        <label class="field-label">Fecha del chequeo</label>
+        <input type="date" id="f_fecha" value="${todayStr()}">
+      </div>
+      <div>
+        <label class="field-label">Realizado por</label>
+        <input type="text" id="f_realizador" placeholder="Nombre">
+      </div>
+    </div>
+
+    ${unidadLabel ? `
+    <div class="row2">
+      <div>
+        <label class="field-label">${unidadLabel} actuales</label>
+        <input type="number" id="f_actuales" min="0" placeholder="0">
+      </div>
+      <div>
+        <label class="field-label">${unidadLabel} último service</label>
+        <input type="number" id="f_ultimoservice" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="hint" id="serviceHint"></div>
+    ` : ""}
+
+    <div class="section-divider">Puntos a revisar</div>
+    <div id="pointsWrap">
+      ${cfg.puntos.map((p,i)=>`
+        <div class="point" data-idx="${i}">
+          <div class="point-name">${p}</div>
+          <div class="seg">
+            <button type="button" data-val="OK" onclick="setEstado(${i},'OK',this)">✓ OK</button>
+            <button type="button" data-val="X" onclick="setEstado(${i},'X',this)">✕ Falla</button>
+            <button type="button" data-val="NC" onclick="setEstado(${i},'NC',this)">NC</button>
+          </div>
+          <textarea placeholder="Observaciones (opcional)" id="obs_${i}"></textarea>
+          <div class="plazo">
+            <label class="field-label" style="margin:8px 0 4px;">Plazo de corrección</label>
+            <select id="plazo_${i}">
+              ${PLAZOS.map(p=>`<option value="${p}">${p}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="saveChecklist()">Guardar chequeo</button>
+  `;
+
+  currentEstados = {};
+  document.getElementById("formOverlay").classList.add("show");
+
+  if(unidadLabel){
+    const hint = document.getElementById("serviceHint");
+    const upd = ()=>{
+      const act = parseFloat(document.getElementById("f_actuales").value)||0;
+      const ult = parseFloat(document.getElementById("f_ultimoservice").value)||0;
+      const rest = cfg.intervaloService - (act-ult);
+      if(act>0 && ult>0){
+        hint.textContent = rest<=0
+          ? "⚠ Service vencido según los " + unidadLabel.toLowerCase() + " cargados."
+          : "Faltan aprox. " + Math.round(rest) + " " + unidadLabel.toLowerCase() + " para el próximo service (cada " + cfg.intervaloService + ").";
+      } else hint.textContent = "";
+    };
+    document.getElementById("f_actuales").addEventListener("input", upd);
+    document.getElementById("f_ultimoservice").addEventListener("input", upd);
+  }
+}
+
+let currentEstados = {};
+function setEstado(idx, val, btn){
+  currentEstados[idx] = val;
+  const seg = btn.parentElement;
+  seg.querySelectorAll("button").forEach(b=>b.classList.remove("on-ok","on-x","on-nc"));
+  btn.classList.add(val==="OK"?"on-ok":val==="X"?"on-x":"on-nc");
+}
+
+function closeForm(){
+  document.getElementById("formOverlay").classList.remove("show");
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function saveChecklist(){
+  const cfg = EQUIPOS[currentTipo];
+  const equipo = document.getElementById("f_equipo").value.trim() || cfg.idsSugeridos[0] || cfg.label;
+  const fecha = document.getElementById("f_fecha").value || todayStr();
+  const realizador = document.getElementById("f_realizador").value.trim();
+
+  let actuales = null, ultimoService = null;
+  if(cfg.unidad){
+    actuales = parseFloat(document.getElementById("f_actuales").value)||0;
+    ultimoService = parseFloat(document.getElementById("f_ultimoservice").value)||0;
+  }
+
+  const puntos = cfg.puntos.map((nombre,i)=>({
+    nombre,
+    estado: currentEstados[i] || "NC",
+    observaciones: document.getElementById("obs_"+i).value.trim(),
+    plazo: document.getElementById("plazo_"+i).value
+  }));
+
+  const proximoChequeo = addDays(fecha, cfg.frecuenciaDias);
+
+  const nuevoChequeo = {
+    tipo: currentTipo, equipo, fecha, realizador,
+    operador: currentOperadorNombre(),
+    actuales, ultimoService, intervaloService: cfg.intervaloService,
+    unidad: cfg.unidad, proximoChequeo, puntos, createdAt: serverTimestamp()
+  };
+  closeForm();
+  confirmarEscritura(setDoc(nuevoId("checklists"), nuevoChequeo))
+    .then(()=>{
+      showToast("Chequeo guardado · próximo el " + fmtDate(proximoChequeo));
+      showView("chequeos");
+    })
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+/* ---------- Historial ---------- */
+function renderHistorial(){
+  const el = document.getElementById("histList");
+  const items = [...STORE.checklists].sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  if(items.length===0){
+    el.innerHTML = `<div class="empty"><b>Todavía no hay chequeos guardados.</b>Realizá el primero desde la pestaña Chequeos.</div>`;
+  }else{
+    el.innerHTML = items.map(it=>{
+      const ok = it.puntos.filter(p=>p.estado==="OK").length;
+      const x = it.puntos.filter(p=>p.estado==="X").length;
+      const nc = it.puntos.filter(p=>p.estado==="NC").length;
+      return `
+        <div class="hist-item" onclick="openDetail('${it.id}')">
+          <div class="hi-top">
+            <b>${EQUIPOS[it.tipo] ? EQUIPOS[it.tipo].label : esc(it.tipo)} — ${esc(it.equipo)}</b>
+            <span class="hi-date">${fmtDate(it.fecha)}</span>
+          </div>
+          <div class="hi-summary">
+            <span class="pill ok">${ok} OK</span>
+            ${x>0 ? `<span class="pill bad">${x} falla${x>1?"s":""}</span>` : ""}
+            ${nc>0 ? `<span class="pill nc">${nc} NC</span>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  const repEl = document.getElementById("reportesList");
+  const reportes = [...STORE.reportes].sort((a,b)=>{
+    if(!!a.resuelto !== !!b.resuelto) return a.resuelto ? 1 : -1;   // sin resolver primero
+    return b.fecha.localeCompare(a.fecha);
+  });
+  if(reportes.length===0){
+    repEl.innerHTML = `<div class="empty"><b>No hay problemas reportados.</b>Podés cargar uno desde Inicio o Chequeos.</div>`;
+  }else{
+    repEl.innerHTML = reportes.map(r=>`
+      <div class="hist-item" style="cursor:default; ${r.resuelto?'opacity:.78;':''}">
+        <div class="hi-top">
+          <b>${esc(r.equipo)}</b>
+          <span class="hi-date">${fmtDate(r.fecha)}</span>
+        </div>
+        <div class="hi-summary">
+          <span class="pill ${r.estado==='Puede continuar'?'ok':r.estado==='Equipo detenido'?'bad':'nc'}">${esc(r.estado)}</span>
+          ${r.resuelto ? `<span class="pill ok">✓ Resuelto ${r.resueltoFecha?fmtDate(r.resueltoFecha):""}</span>` : `<span class="pill warn">Sin resolver</span>`}
+        </div>
+        <div class="hi-summary" style="margin-top:6px;">${esc(r.detalle)}</div>
+        <div class="inf-actions">
+          ${r.resuelto
+            ? `<button class="btn btn-ghost btn-small" onclick="resolverReporte('${r.id}', false)">↩ Reabrir</button>`
+            : `<button class="btn btn-primary btn-small" onclick="resolverReporte('${r.id}', true)">✓ Marcar resuelto</button>`}
+          <button class="btn btn-danger btn-small" onclick="eliminarReporte('${r.id}')">🗑 Eliminar</button>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+async function resolverReporte(id, valor){
+  const datos = valor
+    ? { resuelto:true, resueltoFecha:todayStr(), resueltoPor:currentOperadorNombre() }
+    : { resuelto:false, resueltoFecha:null, resueltoPor:null };
+  try{
+    await confirmarEscritura(updateDoc(doc(db,"reportes",id), datos));
+    showToast(valor ? "Problema marcado como resuelto" : "Problema reabierto");
+  }catch(err){ console.error(err); showToast("No se pudo actualizar — revisá la conexión"); }
+}
+
+async function eliminarReporte(id){
+  if(!confirm("¿Eliminar este reporte de problema? No se puede deshacer.")) return;
+  try{
+    await confirmarEscritura(deleteDoc(doc(db,"reportes",id)));
+    showToast("Reporte eliminado");
+  }catch(err){ console.error(err); showToast("No se pudo eliminar — revisá la conexión"); }
+}
+
+/* ==========================================================
+   INFORMES — reporte de cierre de trabajo para enviar al cliente
+   ========================================================== */
+let FILTRO_INF = "pend";
+function setFiltroInf(f){
+  FILTRO_INF = f;
+  renderInformes();
+}
+
+function renderInformes(){
+  document.querySelectorAll("#infFiltro button").forEach(b=>b.classList.toggle("on", b.dataset.f===FILTRO_INF));
+  const el = document.getElementById("informesList");
+  let items = [...STORE.informes];
+  if(FILTRO_INF==="pend") items = items.filter(i=>!i.enviado);
+  if(FILTRO_INF==="env") items = items.filter(i=>i.enviado);
+  if(items.length===0){
+    el.innerHTML = `<div class="empty"><b>${FILTRO_INF==="env"?"Todavía no marcaste informes como enviados.":FILTRO_INF==="pend"?"No hay informes pendientes de enviar.":"Todavía no hay informes."}</b>Al terminar un trabajo, cargá el informe con el botón “Nuevo informe”.</div>`;
+    return;
+  }
+  el.innerHTML = items.map(i=>`
+    <div class="inf-item">
+      <div class="hi-top">
+        <div>
+          <b>${esc(i.cliente || i.campo || "Sin cliente")}</b>
+          <div class="card-sub">${esc(i.campo||"")}${i.localidad?" · "+esc(i.localidad):""}</div>
+        </div>
+        <span class="hi-date">${fmtDate(i.fecha)}</span>
+      </div>
+      <div class="hi-summary">
+        ${i.enviado
+          ? `<span class="pill ok">✓ Enviado ${i.enviadoFecha?fmtDate(i.enviadoFecha):""}</span>`
+          : `<span class="pill warn">Pendiente de enviar</span>`}
+        ${i.supAplicada ? `<span class="pill nc">${esc(i.supAplicada)} ha</span>` : ""}
+        ${i.cultivo ? `<span class="pill nc">${esc(i.cultivo)}</span>` : ""}
+        ${i.objetivo ? `<span class="pill nc">${esc(i.objetivo)}</span>` : ""}
+      </div>
+      <div class="inf-actions">
+        <button class="btn btn-primary btn-small" onclick="pdfInforme('${i.id}')">📄 PDF</button>
+        <button class="btn btn-ghost btn-small" onclick="openInforme('${i.id}')">✏️ Editar</button>
+        <button class="btn btn-ghost btn-small" onclick="marcarEnviado('${i.id}', ${i.enviado?"false":"true"})">${i.enviado?"↩ Desmarcar":"✓ Marcar enviado"}</button>
+        <button class="btn btn-danger btn-small" onclick="eliminarInforme('${i.id}')">🗑</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* Delta T (Stull 2011) — ayuda para evaluar condiciones de aplicación */
+function calcDeltaT(T, RH){
+  if(isNaN(T) || isNaN(RH)) return null;
+  const Tw = T*Math.atan(0.151977*Math.sqrt(RH+8.313659))
+    + Math.atan(T+RH) - Math.atan(RH-1.676331)
+    + 0.00391838*Math.pow(RH,1.5)*Math.atan(0.023101*RH) - 4.686035;
+  const deltaT = Math.round((T-Tw)*10)/10;
+  let cls="ok", msg="Condiciones ideales para aplicar.";
+  if(deltaT<2){ cls="warn"; msg="Delta T bajo: riesgo de escurrimiento por evaporación lenta."; }
+  else if(deltaT>=8 && deltaT<=10){ cls="warn"; msg="Condición marginal: extremar precauciones."; }
+  else if(deltaT>10){ cls="bad"; msg="No recomendado: alto riesgo de deriva por evaporación excesiva."; }
+  return {deltaT, cls, msg};
+}
+
+function actualizarDeltaT(){
+  const box = document.getElementById("i_dt");
+  if(!box) return;
+  const r = calcDeltaT(parseFloat(document.getElementById("i_temp").value), parseFloat(document.getElementById("i_hum").value));
+  box.innerHTML = r ? `<div class="dt-result ${r.cls}" style="margin-top:8px; padding:10px 12px;"><b>Delta T ≈ ${r.deltaT}</b>${r.msg}</div>` : "";
+}
+
+/* ---------- firma (canvas) ---------- */
+let firmaSucia = false, firmaPrev = "";
+function iniciarFirma(previa){
+  firmaSucia = false; firmaPrev = previa || "";
+  const cv = document.getElementById("i_firma");
+  cv.width = 600; cv.height = 220;
+  const ctx = cv.getContext("2d");
+  ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#16223A";
+  if(firmaPrev){
+    const img = new Image();
+    img.onload = ()=> ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    img.src = firmaPrev;
+  }
+  let dibujando = false;
+  const pos = e=>{
+    const r = cv.getBoundingClientRect();
+    return { x:(e.clientX-r.left)*cv.width/r.width, y:(e.clientY-r.top)*cv.height/r.height };
+  };
+  cv.addEventListener("pointerdown", e=>{
+    if(!firmaSucia && firmaPrev){ ctx.clearRect(0,0,cv.width,cv.height); firmaPrev=""; }
+    dibujando = true; firmaSucia = true; cv.setPointerCapture(e.pointerId);
+    const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x+0.1,p.y+0.1); ctx.stroke();
+  });
+  cv.addEventListener("pointermove", e=>{
+    if(!dibujando) return;
+    const p = pos(e); ctx.lineTo(p.x,p.y); ctx.stroke();
+  });
+  const fin = ()=>{ dibujando = false; };
+  cv.addEventListener("pointerup", fin);
+  cv.addEventListener("pointercancel", fin);
+}
+function limpiarFirma(){
+  const cv = document.getElementById("i_firma");
+  cv.getContext("2d").clearRect(0,0,cv.width,cv.height);
+  firmaSucia = false; firmaPrev = "";
+}
+
+/* ---------- formulario ---------- */
+let informeEditandoId = null;
+function openInforme(id){
+  informeEditandoId = id || null;
+  const i = id ? STORE.informes.find(x=>x.id===id) : null;
+  if(id && !i) return;
+  const v = (k, def="") => esc(i && i[k]!=null ? i[k] : def);
+  const modal = document.getElementById("formModal");
+  const dirs = ["","N","NE","E","SE","S","SO","O","NO"];
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">${i?"Editar informe":"Nuevo informe de aplicación"}</h1>
+
+    <div class="row2">
+      <div><label class="field-label" style="margin-top:0;">Fecha</label><input type="date" id="i_fecha" value="${v("fecha", todayStr())}"></div>
+      <div><label class="field-label" style="margin-top:0;">Localidad</label><input type="text" id="i_localidad" value="${v("localidad")}"></div>
+    </div>
+    <label class="field-label">Cliente</label>
+    <input type="text" id="i_cliente" value="${v("cliente")}" placeholder="Nombre del cliente">
+    <label class="field-label">Campo</label>
+    <input type="text" id="i_campo" value="${v("campo")}" placeholder="Nombre del campo">
+    <div class="row2">
+      <div><label class="field-label">Encargado</label><input type="text" id="i_encargado" value="${v("encargado", currentOperadorNombre())}"></div>
+      <div><label class="field-label">Ayudante</label><input type="text" id="i_ayudante" value="${v("ayudante")}"></div>
+    </div>
+    <label class="field-label">Equipo</label>
+    <input type="text" id="i_equipo" list="dl_inf_equipo" value="${v("equipo")}" placeholder="Dron / equipo utilizado">
+    <datalist id="dl_inf_equipo">${EQUIPOS.dron.idsSugeridos.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
+
+    <div class="section-divider">Trabajo realizado</div>
+    <div class="row2">
+      <div><label class="field-label" style="margin-top:0;">Cultivo</label><input type="text" id="i_cultivo" value="${v("cultivo")}"></div>
+      <div><label class="field-label" style="margin-top:0;">Objetivo</label><input type="text" id="i_objetivo" value="${v("objetivo")}" placeholder="Ej: herbicida"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Superficie total (ha)</label><input type="number" inputmode="decimal" step="any" id="i_suptotal" value="${v("supTotal")}"></div>
+      <div><label class="field-label">Superficie aplicada (ha)</label><input type="number" inputmode="decimal" step="any" id="i_supaplic" value="${v("supAplicada")}"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Hora inicio</label><input type="time" id="i_hini" value="${v("horaInicio")}"></div>
+      <div><label class="field-label">Hora fin</label><input type="time" id="i_hfin" value="${v("horaFin")}"></div>
+    </div>
+    <label class="field-label">Comentario</label>
+    <textarea id="i_comentario" style="min-height:56px;">${v("comentario")}</textarea>
+
+    <div class="section-divider">Detalles de la aplicación</div>
+    <div class="row2">
+      <div><label class="field-label" style="margin-top:0;">Ancho operativo (m)</label><input type="number" inputmode="decimal" step="any" id="i_ancho" value="${v("ancho")}"></div>
+      <div><label class="field-label" style="margin-top:0;">Velocidad avance</label><input type="number" inputmode="decimal" step="any" id="i_veloc" value="${v("velocidad")}"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Altura de vuelo (m)</label><input type="number" inputmode="decimal" step="any" id="i_altura" value="${v("altura")}"></div>
+      <div><label class="field-label">Volumen aplicado (L/ha)</label><input type="number" inputmode="decimal" step="any" id="i_volumen" value="${v("volumen")}"></div>
+    </div>
+    <label class="field-label">Caldo</label>
+    <textarea id="i_caldo" style="min-height:56px;" placeholder="Productos y dosis">${v("caldo")}</textarea>
+    <label class="field-label">Tamaño de gota</label>
+    <input type="text" id="i_gota" value="${v("gota")}" placeholder="Ej: media / 250 µm">
+
+    <div class="section-divider">Condiciones ambientales</div>
+    <div class="row2">
+      <div><label class="field-label" style="margin-top:0;">Temperatura (°C)</label><input type="number" inputmode="decimal" step="any" id="i_temp" value="${v("temp")}" oninput="actualizarDeltaT()"></div>
+      <div><label class="field-label" style="margin-top:0;">Humedad (%)</label><input type="number" inputmode="decimal" step="any" id="i_hum" value="${v("hum")}" oninput="actualizarDeltaT()"></div>
+    </div>
+    <div id="i_dt"></div>
+    <div class="row2">
+      <div><label class="field-label">Viento prom. (km/h)</label><input type="number" inputmode="decimal" step="any" id="i_viento" value="${v("viento")}"></div>
+      <div><label class="field-label">Ráfagas (km/h)</label><input type="number" inputmode="decimal" step="any" id="i_rafagas" value="${v("rafagas")}"></div>
+    </div>
+    <label class="field-label">Dirección del viento</label>
+    <select id="i_dir">${dirs.map(d=>`<option value="${d}" ${(i&&i.direccion===d)?"selected":""}>${d||"—"}</option>`).join("")}</select>
+
+    <label class="field-label">Observaciones</label>
+    <textarea id="i_obs" style="min-height:70px;">${v("observaciones")}</textarea>
+
+    <label class="field-label">Firma del encargado</label>
+    <canvas id="i_firma" class="sigbox"></canvas>
+    <button type="button" class="btn btn-ghost btn-small" style="margin-top:6px;" onclick="limpiarFirma()">Borrar firma</button>
+
+    <button class="btn btn-primary btn-block" style="margin-top:18px;" onclick="guardarInforme()">${i?"Guardar cambios":"Guardar informe"}</button>
+  `;
+  document.getElementById("formOverlay").classList.add("show");
+  iniciarFirma(i ? i.firma : "");
+  actualizarDeltaT();
+}
+
+async function guardarInforme(){
+  const g = id => document.getElementById(id).value.trim();
+  const campo = g("i_campo"), cliente = g("i_cliente");
+  if(!campo && !cliente){ showToast("Indicá al menos el cliente o el campo"); return; }
+  const cv = document.getElementById("i_firma");
+  const firma = firmaSucia ? cv.toDataURL("image/png") : firmaPrev;
+  const datos = {
+    fecha: g("i_fecha") || todayStr(), localidad: g("i_localidad"), cliente, campo,
+    encargado: g("i_encargado"), ayudante: g("i_ayudante"), equipo: g("i_equipo"),
+    cultivo: g("i_cultivo"), objetivo: g("i_objetivo"),
+    supTotal: g("i_suptotal"), supAplicada: g("i_supaplic"),
+    horaInicio: g("i_hini"), horaFin: g("i_hfin"), comentario: g("i_comentario"),
+    ancho: g("i_ancho"), velocidad: g("i_veloc"), altura: g("i_altura"), volumen: g("i_volumen"),
+    caldo: g("i_caldo"), gota: g("i_gota"),
+    temp: g("i_temp"), hum: g("i_hum"), viento: g("i_viento"), rafagas: g("i_rafagas"),
+    direccion: document.getElementById("i_dir").value,
+    observaciones: g("i_obs"), firma,
+    updatedAt: serverTimestamp()
+  };
+  const id = informeEditandoId;
+  closeForm();
+  try{
+    if(id){
+      await confirmarEscritura(updateDoc(doc(db,"informes",id), datos));
+    }else{
+      const ref = nuevoId("informes");
+      await confirmarEscritura(setDoc(ref, { ...datos, enviado:false, enviadoFecha:null, operador:currentOperadorNombre(), createdAt:serverTimestamp() }));
+    }
+    showToast(id ? "Informe actualizado" : "Informe guardado");
+    showView("informes");
+  }catch(err){ console.error(err); showToast("No se pudo guardar — revisá la conexión"); }
+}
+
+async function marcarEnviado(id, valor){
+  try{
+    await confirmarEscritura(updateDoc(doc(db,"informes",id), { enviado:valor, enviadoFecha: valor ? todayStr() : null, updatedAt:serverTimestamp() }));
+    showToast(valor ? "Marcado como enviado" : "Vuelve a pendiente");
+  }catch(err){ console.error(err); showToast("No se pudo actualizar — revisá la conexión"); }
+}
+
+async function eliminarInforme(id){
+  if(!confirm("¿Eliminar este informe? No se puede deshacer.")) return;
+  try{
+    await confirmarEscritura(deleteDoc(doc(db,"informes",id)));
+    showToast("Informe eliminado");
+  }catch(err){ console.error(err); showToast("No se pudo eliminar — revisá la conexión"); }
+}
+
+/* ---------- PDF para el cliente ---------- */
+function htmlInforme(i){
+  const celda = (l, val, suf="")=>`
+    <td style="width:50%; padding:7px 10px; border-bottom:1px solid #D7DEE6; vertical-align:top;">
+      <div style="font-size:9px; font-weight:600; color:#5C7FA6; text-transform:uppercase; letter-spacing:.5px;">${l}</div>
+      <div style="font-size:12.5px; font-weight:500; color:#16223A; margin-top:2px; white-space:pre-wrap;">${val ? esc(val)+suf : "—"}</div>
+    </td>`;
+  const fila = (a,b)=>`<tr>${a}${b||'<td style="width:50%; border-bottom:1px solid #D7DEE6;"></td>'}</tr>`;
+  const sec = t=>`<div style="margin:16px 0 4px; font-size:10.5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1B3358; border-bottom:2px solid #E4BE7A; padding-bottom:4px;">${t}</div>`;
+  const dt = calcDeltaT(parseFloat(i.temp), parseFloat(i.hum));
+  const colDt = dt ? (dt.cls==="ok"?"#4C7156":dt.cls==="warn"?"#C98A2E":"#B4442E") : "";
+  return `
+  <div style="width:794px; min-height:1110px; display:flex; flex-direction:column; background:#fff; font-family:'Poppins','Helvetica Neue',Arial,sans-serif; color:#16223A; box-sizing:border-box;">
+    <div style="background:#1B3358; color:#EDF1F6; padding:26px 38px; display:flex; align-items:center; gap:16px;">
+      <svg viewBox="0 0 120 120" width="62" height="62">
+        <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+        <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+        <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+      </svg>
+      <div style="flex:1;">
+        <div style="font-weight:800; font-size:26px; line-height:1;">PG<span style="color:#E4BE7A; font-weight:500;">Agro</span></div>
+        <div style="font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#E4BE7A; margin-top:5px;">Precisión y calidad</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700; font-size:16px;">Informe de aplicación</div>
+        <div style="font-size:11.5px; opacity:.85; margin-top:3px;">${fmtDate(i.fecha)}</div>
+      </div>
+    </div>
+
+    <div style="padding:8px 38px 24px; flex:1;">
+      ${sec("Datos generales")}
+      <table style="width:100%; border-collapse:collapse;">
+        ${fila(celda("Cliente", i.cliente), celda("Campo", i.campo))}
+        ${fila(celda("Localidad", i.localidad), celda("Equipo", i.equipo))}
+        ${fila(celda("Encargado", i.encargado), celda("Ayudante", i.ayudante))}
+      </table>
+
+      ${sec("Trabajo realizado")}
+      <table style="width:100%; border-collapse:collapse;">
+        ${fila(celda("Cultivo", i.cultivo), celda("Objetivo", i.objetivo))}
+        ${fila(celda("Superficie total", i.supTotal, " ha"), celda("Superficie aplicada", i.supAplicada, " ha"))}
+        ${fila(celda("Hora inicio", i.horaInicio), celda("Hora fin", i.horaFin))}
+      </table>
+      ${i.comentario ? `<div style="font-size:11.5px; margin:8px 10px 0; white-space:pre-wrap;"><b>Comentario:</b> ${esc(i.comentario)}</div>` : ""}
+
+      ${sec("Detalles de la aplicación")}
+      <table style="width:100%; border-collapse:collapse;">
+        ${fila(celda("Ancho operativo", i.ancho, " m"), celda("Volumen aplicado", i.volumen, " L/ha"))}
+        ${fila(celda("Velocidad de avance", i.velocidad), celda("Altura de vuelo", i.altura, " m"))}
+        ${fila(celda("Caldo", i.caldo), celda("Tamaño de gota", i.gota))}
+      </table>
+
+      ${sec("Condiciones ambientales")}
+      <table style="width:100%; border-collapse:collapse;">
+        ${fila(celda("Temperatura", i.temp, " °C"), celda("Humedad", i.hum, " %"))}
+        ${fila(celda("Viento promedio", i.viento, " km/h"), celda("Ráfagas", i.rafagas, " km/h"))}
+        ${fila(celda("Dirección del viento", i.direccion))}
+      </table>
+      ${dt ? `<div style="margin:8px 10px 0; font-size:11px; color:${colDt}; font-weight:600;">Delta T ≈ ${dt.deltaT} · ${dt.msg}</div>` : ""}
+
+      ${i.observaciones ? `${sec("Observaciones")}<div style="font-size:12px; padding:6px 10px; white-space:pre-wrap;">${esc(i.observaciones)}</div>` : ""}
+
+      <div style="margin-top:34px; display:flex; justify-content:flex-end;">
+        <div style="width:240px; text-align:center;">
+          <div style="height:70px; display:flex; align-items:flex-end; justify-content:center;">${i.firma ? `<img src="${i.firma}" style="max-height:66px; max-width:230px;">` : ""}</div>
+          <div style="border-top:1px solid #16223A; padding-top:4px; font-size:10.5px; color:#5C7FA6;">Firma encargado${i.encargado ? " · "+esc(i.encargado) : ""}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#EDF1F6; padding:12px 38px; font-size:9.5px; color:#5C7FA6; display:flex; justify-content:space-between;">
+      <span>PGAgro SAS · RUT 221067510014 · Paysandú, Uruguay</span>
+      <span>+598 99 496 906</span>
+    </div>
+  </div>`;
+}
+
+async function pdfInforme(id){
+  const i = STORE.informes.find(x=>x.id===id);
+  if(!i) return;
+  if(!window.html2pdf){ showToast("No se pudo cargar el generador de PDF — necesita conexión la primera vez"); return; }
+  showToast("Generando PDF…");
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:fixed; left:-10000px; top:0; width:794px; background:#fff;";
+  wrap.innerHTML = htmlInforme(i);
+  document.body.appendChild(wrap);
+  const limpio = s => (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_|_$/g,"");
+  const nombre = `Informe_${limpio(i.cliente||i.campo)||"aplicacion"}_${i.fecha||todayStr()}.pdf`;
+  try{
+    const blob = await window.html2pdf().set({
+      margin:0, filename:nombre, image:{type:"jpeg", quality:0.95},
+      html2canvas:{scale:2, useCORS:true, backgroundColor:"#ffffff"},
+      jsPDF:{unit:"mm", format:"a4", orientation:"portrait"}
+    }).from(wrap.firstElementChild).outputPdf("blob");
+    const file = new File([blob], nombre, {type:"application/pdf"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:"Informe de aplicación — PGAgro"}); showToast("Listo — cuando lo envíes, marcalo como enviado"); }
+      catch(e){ if(e && e.name!=="AbortError") descargarBlob(blob, nombre); }
+    }else{
+      descargarBlob(blob, nombre);
+      showToast("PDF descargado");
+    }
+  }catch(err){
+    console.error(err); showToast("No se pudo generar el PDF");
+  }finally{
+    wrap.remove();
+  }
+}
+function descargarBlob(blob, nombre){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+
+const EQUIPOS_REPORTE = ["XAG P150","DJI Mavic 3M","Generador grande","Camión KIA 4x4","Zorra","Batería","Otro"];
+
+function openReporte(){
+  const modal = document.getElementById("formModal");
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Reportar problema</h1>
+    <label class="field-label" style="margin-top:0;">Equipo</label>
+    <select id="r_equipo">${EQUIPOS_REPORTE.map(e=>`<option>${e}</option>`).join("")}</select>
+    <label class="field-label">Qué pasó</label>
+    <textarea id="r_detalle" placeholder="Describí el problema" style="min-height:70px;"></textarea>
+    <label class="field-label">Estado</label>
+    <select id="r_estado">
+      <option>Puede continuar</option>
+      <option>Puede continuar con observación</option>
+      <option>Equipo detenido</option>
+    </select>
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="guardarReporte()">Guardar reporte</button>
+  `;
+  document.getElementById("formOverlay").classList.add("show");
+}
+
+function guardarReporte(){
+  const detalle = document.getElementById("r_detalle").value.trim();
+  if(!detalle){ showToast("Contá qué pasó antes de guardar"); return; }
+  const reporte = {
+    fecha: todayStr(),
+    operador: currentOperadorNombre(),
+    equipo: document.getElementById("r_equipo").value,
+    detalle,
+    estado: document.getElementById("r_estado").value,
+    resuelto: false,
+    createdAt: serverTimestamp()
+  };
+  closeForm();
+  confirmarEscritura(setDoc(nuevoId("reportes"), reporte))
+    .then(()=>{ showToast("Reporte guardado"); refrescarVistaActual(); })
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+/* cerrar modales tocando el fondo */
+
+function openDetail(id){
+  const it = STORE.checklists.find(c=>c.id===id);
+  if(!it) return;
+  const modal = document.getElementById("detailModal");
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="document.getElementById('detailOverlay').classList.remove('show')">‹ Cerrar</button>
+    <h1 class="page-title">${EQUIPOS[it.tipo].label} — ${esc(it.equipo)}</h1>
+    <div class="card">
+      <div class="card-meta">Fecha: ${fmtDate(it.fecha)} ${it.realizador ? " · Realizado por: "+it.realizador : ""}</div>
+      ${it.unidad ? `<div class="card-meta">${it.unidad === "km" ? "Kilómetros" : "Horas"} actuales: ${it.actuales} · Último service: ${it.ultimoService}</div>` : ""}
+      <div class="card-meta">Próximo chequeo: ${fmtDate(it.proximoChequeo)}</div>
+    </div>
+    <div class="section-divider">Puntos revisados</div>
+    ${it.puntos.map(p=>`
+      <div class="point">
+        <div class="point-name">${p.nombre}
+          <span class="pill ${p.estado==='OK'?'ok':p.estado==='X'?'bad':'nc'}" style="margin-left:6px;">${p.estado}</span>
+        </div>
+        ${p.observaciones ? `<div class="hint">${p.observaciones}</div>` : ""}
+        ${p.plazo && p.plazo!=="Sin corrección" ? `<div class="hint">Plazo de corrección: ${p.plazo}</div>` : ""}
+      </div>
+    `).join("")}
+  `;
+  document.getElementById("detailOverlay").classList.add("show");
+}
+
+/* cerrar modales tocando el fondo */
+document.getElementById("formOverlay").addEventListener("click", e=>{ if(e.target.id==="formOverlay") closeForm(); });
+document.getElementById("detailOverlay").addEventListener("click", e=>{ if(e.target.id==="detailOverlay") e.currentTarget.classList.remove("show"); });
+
+/* ---------- Operadores habilitados (solo administradores) ---------- */
+let OPERADORES = [], unsubOps = null;
+function openOperadores(){
+  if(!ES_ADMIN) return;
+  if(!unsubOps){
+    unsubOps = onSnapshot(collection(db,"operadores"), snap=>{
+      OPERADORES = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a.nombre||a.id).localeCompare(b.nombre||b.id));
+      if(document.getElementById("listaOps")) pintarOperadores();
+    }, err=>console.error("operadores:", err));
+  }
+  document.getElementById("formModal").innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Operadores habilitados</h1>
+    <div class="hint" style="margin-bottom:10px;">Solo ustedes (administradores) y las personas de esta lista pueden entrar. Cada una debe crear su cuenta con ese mismo email y verificarlo.</div>
+    <label class="field-label" style="margin-top:0;">Nombre</label>
+    <input type="text" id="op_nombre" placeholder="Ej: Juancho">
+    <label class="field-label">Email</label>
+    <input type="text" id="op_email" placeholder="operador@gmail.com" autocapitalize="off">
+    <button class="btn btn-primary btn-block" onclick="guardarOperador()">Habilitar</button>
+    <div class="section-divider">Habilitados</div>
+    <div id="listaOps"></div>`;
+  document.getElementById("formOverlay").classList.add("show");
+  pintarOperadores();
+}
+function pintarOperadores(){
+  const el = document.getElementById("listaOps");
+  el.innerHTML = OPERADORES.length ? OPERADORES.map(o=>`
+    <div class="orden-mini" style="display:flex; align-items:center; gap:8px;">
+      <div style="flex:1; min-width:0;"><b>${esc(o.nombre||"—")}</b><div class="om-meta" style="overflow-wrap:anywhere;">${esc(o.id)}</div></div>
+      <button class="btn btn-danger btn-small" onclick="quitarOperador('${esc(o.id)}')">Quitar</button>
+    </div>`).join("") : `<div class="empty">Todavía no habilitaste a nadie.</div>`;
+}
+async function guardarOperador(){
+  const email = document.getElementById("op_email").value.trim().toLowerCase();
+  const nombre = document.getElementById("op_nombre").value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showToast("Revisá el email"); return; }
+  try{
+    await confirmarEscritura(setDoc(doc(db,"operadores",email), { email, nombre, creadoPor:currentOperadorNombre(), createdAt:serverTimestamp() }));
+    document.getElementById("op_email").value = ""; document.getElementById("op_nombre").value = "";
+    showToast("Operador habilitado");
+  }catch(err){ console.error(err); showToast("No se pudo guardar — revisá la conexión"); }
+}
+async function quitarOperador(id){
+  if(!confirm("¿Quitar el acceso a "+id+"?")) return;
+  try{ await confirmarEscritura(deleteDoc(doc(db,"operadores",id))); showToast("Acceso quitado"); }
+  catch(err){ console.error(err); showToast("No se pudo quitar"); }
+}
+
+renderInicio();
+
+/* ---------- exponer funciones usadas por atributos onclick/onchange del HTML ----------
+   (necesario porque el script es un módulo ES: sus declaraciones no son globales) */
+Object.assign(window, {
+  showView, openForm, closeForm, setEstado, saveChecklist, openDetail,
+  openReporte, guardarReporte, resolverReporte, eliminarReporte,
+  setFiltroInf, openInforme, guardarInforme, marcarEnviado, eliminarInforme, pdfInforme,
+  actualizarDeltaT, limpiarFirma, yaVerifique, reenviarVerificacion,
+  openOperadores, guardarOperador, quitarOperador,
+  mostrarTab, hacerLogin, hacerRegistro, cerrarSesion
+});
+</script>
+</body>
+</html>
