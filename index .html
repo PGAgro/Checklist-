@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1B3358">
+<title>PGAgro — Chequeos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+  :root{
+    --ink:#16223A;
+    --green:#1B3358;
+    --sage:#5C7FA6;
+    --amber:#E4BE7A;
+    --paper:#EDF1F6;
+    --bg:#F6F8FA;
+    --ok:#4C7156;
+    --warn:#C98A2E;
+    --bad:#B4442E;
+    --line:#D7DEE6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Poppins', 'Helvetica Neue', Arial, sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    padding-bottom:78px;
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky; top:0; z-index:20;
+    background:var(--green);
+    color:var(--paper);
+    padding:calc(16px + env(safe-area-inset-top)) 18px 14px;
+    display:flex; align-items:center; gap:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);
+  }
+  header .icon{width:34px; height:34px; flex:0 0 auto;}
+  header .brand{display:flex; flex-direction:column; line-height:1.05;}
+  header .brand b{font-weight:800; font-size:19px;}
+  header .brand span{font-weight:500; font-size:12px; color:var(--amber); letter-spacing:.4px;}
+  header .today{margin-left:auto; text-align:right; font-size:11px; color:var(--paper); opacity:.85;}
+
+  /* ---------- Views ---------- */
+  main{flex:1; padding:16px 16px 8px;}
+  .view{display:none; animation:fade .18s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h1.page-title{font-size:15px; font-weight:700; margin:4px 0 14px; color:var(--green); letter-spacing:.2px;}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--paper);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:12px;
+    border:1px solid var(--line);
+  }
+  .card-row{display:flex; align-items:center; gap:12px;}
+  .card-row .dot{width:11px; height:11px; border-radius:50%; flex:0 0 auto;}
+  .dot.ok{background:var(--ok);}
+  .dot.warn{background:var(--warn);}
+  .dot.bad{background:var(--bad);}
+  .dot.grey{background:#A9B4C2;}
+  .card-title{font-weight:700; font-size:15px; color:var(--ink);}
+  .card-sub{font-size:12.5px; color:#4A5568; margin-top:2px;}
+  .card-meta{font-size:11.5px; color:#7A8699; margin-top:6px;}
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    border-radius:12px; font-family:inherit; font-weight:600; font-size:13.5px;
+    padding:11px 16px; letter-spacing:.2px;
+    transition:transform .05s ease;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--green); color:var(--paper); width:100%;}
+  .btn-outline{background:transparent; color:var(--green); border:1.5px solid var(--green); width:100%;}
+  .btn-amber{background:var(--amber); color:var(--ink); width:100%;}
+  .btn-small{padding:8px 12px; font-size:12.5px; border-radius:10px;}
+  .btn-block{display:block; width:100%; margin-top:10px;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  /* ---------- Equipment tiles (Chequeos tab) ---------- */
+  .tile{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px;
+    padding:16px; margin-bottom:12px; display:flex; align-items:center; gap:14px;
+    cursor:pointer;
+  }
+  .tile .tile-ico{
+    width:44px; height:44px; border-radius:12px; background:var(--green);
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+    color:var(--amber); font-size:20px;
+  }
+  .tile .tile-txt b{display:block; font-size:14.5px; color:var(--ink);}
+  .tile .tile-txt span{font-size:12px; color:#5C7FA6;}
+  .tile .chev{margin-left:auto; color:var(--sage); font-size:18px;}
+
+  /* ---------- Forms ---------- */
+  label.field-label{display:block; font-size:12px; font-weight:600; color:var(--green); margin:14px 0 5px;}
+  input[type=text], input[type=date], input[type=number], select, textarea{
+    width:100%; font-family:inherit; font-size:14px; color:var(--ink);
+    background:#fff; border:1.5px solid var(--line); border-radius:10px;
+    padding:10px 12px;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--sage); outline-offset:1px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .hint{font-size:11px; color:#7A8699; margin-top:4px;}
+
+  .point{
+    border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:10px; background:#fff;
+  }
+  .point-name{font-weight:600; font-size:13.5px; margin-bottom:8px;}
+  .seg{display:flex; gap:6px; margin-bottom:8px;}
+  .seg button{
+    flex:1; border:1.5px solid var(--line); background:#fff; border-radius:9px;
+    padding:8px 0; font-family:inherit; font-weight:700; font-size:13px; color:#7A8699; cursor:pointer;
+  }
+  .seg button.on-ok{background:var(--ok); border-color:var(--ok); color:#fff;}
+  .seg button.on-x{background:var(--bad); border-color:var(--bad); color:#fff;}
+  .seg button.on-nc{background:#A9B4C2; border-color:#A9B4C2; color:#fff;}
+  .point textarea{min-height:38px; resize:vertical; font-size:13px;}
+  .point .plazo{margin-top:8px;}
+
+  .section-divider{
+    font-size:11px; font-weight:700; color:var(--sage); text-transform:uppercase;
+    letter-spacing:.6px; margin:20px 0 10px; display:flex; align-items:center; gap:8px;
+  }
+  .section-divider::after{content:""; flex:1; height:1px; background:var(--line);}
+
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600;
+    color:var(--green); background:none; border:none; cursor:pointer; padding:0 0 12px; font-family:inherit;
+  }
+
+  /* ---------- Historial ---------- */
+  .hist-item{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:13px 15px; margin-bottom:10px; cursor:pointer;
+  }
+  .hist-item .hi-top{display:flex; justify-content:space-between; align-items:center;}
+  .hist-item b{font-size:14px;}
+  .hist-item .hi-date{font-size:11.5px; color:#7A8699;}
+  .hist-item .hi-summary{font-size:12px; color:#4A5568; margin-top:4px;}
+  .pill{
+    display:inline-block; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:20px; margin-right:4px;
+  }
+  .pill.ok{background:rgba(76,113,86,.15); color:var(--ok);}
+  .pill.bad{background:rgba(180,68,46,.15); color:var(--bad);}
+  .pill.nc{background:rgba(139,138,124,.18); color:#5A6478;}
+
+  .empty{
+    text-align:center; padding:36px 20px; color:#7A8699; font-size:13px;
+  }
+  .empty b{display:block; color:var(--ink); font-size:14px; margin-bottom:4px;}
+
+  /* ---------- Bottom nav ---------- */
+  nav.tabbar{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px; background:#fff; border-top:1px solid var(--line);
+    display:flex; z-index:30;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav.tabbar button{
+    flex:1; background:none; border:none; font-family:inherit; cursor:pointer;
+    padding:9px 2px 7px; display:flex; flex-direction:column; align-items:center; gap:2px;
+    color:#A9B4C2; font-size:9.3px; font-weight:600;
+  }
+  nav.tabbar button .ic{font-size:17px; line-height:1;}
+  nav.tabbar button.active{color:var(--green);}
+
+  /* ---------- Checklists de salida / previo ---------- */
+  .sal-prog{margin:0 0 14px;}
+  .sal-prog .t{font-size:12.5px; font-weight:700; color:var(--green); margin-bottom:6px; display:flex; justify-content:space-between;}
+  .sal-bar{height:8px; border-radius:6px; background:#E2E8F0; overflow:hidden;}
+  .sal-bar i{display:block; height:100%; background:var(--ok); transition:width .25s;}
+  .sal-leyenda{display:flex; gap:12px; flex-wrap:wrap; font-size:11.5px; color:#4A5568; margin:0 0 14px;}
+  .sal-leyenda span::before{content:""; display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; vertical-align:-1px;}
+  .sal-leyenda .r::before{background:var(--bad);} .sal-leyenda .a::before{background:var(--warn);} .sal-leyenda .v::before{background:var(--ok);}
+  .sal-row{display:flex; gap:8px; align-items:stretch; margin-bottom:8px;}
+  .sal-main{
+    flex:1; min-width:0; display:flex; gap:12px; align-items:center; text-align:left; cursor:pointer;
+    background:#fff; border:1.5px solid var(--line); border-left:6px solid var(--bad);
+    border-radius:14px; padding:12px; min-height:58px; font-family:inherit; -webkit-tap-highlight-color:transparent;
+  }
+  .sal-main.s1{border-left-color:var(--warn); background:#FFF8EC;}
+  .sal-main.s2{border-left-color:var(--ok); background:#EFF5F0;}
+  .sal-chk{
+    width:28px; height:28px; border-radius:50%; flex:0 0 auto; border:2.5px solid var(--bad);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:16px; line-height:1;
+  }
+  .s1 .sal-chk{background:var(--warn); border-color:var(--warn);}
+  .s2 .sal-chk{background:var(--ok); border-color:var(--ok);}
+  .sal-txt{font-size:13.5px; font-weight:600; color:var(--ink); line-height:1.3;}
+  .sal-meta{font-size:11px; color:#7A8699; margin-top:3px; font-weight:500;}
+  .sal-hint{font-size:12px; color:#4A5568; margin-top:4px; font-weight:500;}
+  .sal-proc{
+    width:50px; flex:0 0 auto; border:1.5px solid var(--line); background:#fff; border-radius:14px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-family:inherit;
+  }
+  .sal-proc i{display:block; width:20px; height:20px; border-radius:50%; border:2.5px solid var(--warn); box-sizing:border-box;}
+  .sal-proc.on{background:#FFF1D6; border-color:var(--warn);}
+  .sal-proc.on i{background:var(--warn);}
+  .sal-sec{font-size:11.5px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:#7A8699; margin:16px 0 8px;}
+
+  .alert-card{
+    background:#FBEAE6; border:1px solid #E7B7A8; border-radius:14px; padding:13px 15px; margin-bottom:12px;
+  }
+  .alert-card b{font-size:13.5px; color:var(--bad); display:block; margin-bottom:2px;}
+  .alert-card span{font-size:12px; color:#7A4436;}
+
+  .prod-row{display:grid; grid-template-columns:1.3fr .8fr 1fr auto; gap:6px; align-items:center; margin-bottom:8px;}
+  .prod-row select, .prod-row input{font-size:12.5px; padding:8px 8px;}
+  .rm-btn{
+    background:none; border:none; color:var(--bad); font-size:18px; cursor:pointer; padding:0 4px;
+  }
+  .result-row{
+    display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px dashed var(--line);
+  }
+  .result-row:last-child{border-bottom:none;}
+  .order-list-num{
+    counter-reset:carga;
+  }
+  .order-list-num li{
+    counter-increment:carga;
+    list-style:none; position:relative; padding-left:26px; margin-bottom:6px; font-size:13px;
+  }
+  .order-list-num li::before{
+    content:counter(carga); position:absolute; left:0; top:-1px;
+    background:var(--sage); color:#fff; width:19px; height:19px; border-radius:50%;
+    font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .dt-result{
+    border-radius:14px; padding:14px; margin-top:10px; font-size:13px;
+  }
+  .dt-result.ok{background:rgba(76,113,86,.13); color:var(--ok);}
+  .dt-result.warn{background:rgba(201,138,46,.15); color:var(--warn);}
+  .dt-result.bad{background:rgba(180,68,46,.13); color:var(--bad);}
+  .dt-result b{display:block; font-size:14.5px; margin-bottom:3px;}
+  .quick-actions{display:flex; gap:10px; margin-bottom:14px;}
+  .op-log{display:flex; gap:8px; margin:10px 0;}
+  .op-log button{flex:1;}
+  .op-log .done{background:var(--sage); color:#fff; border:1.5px solid var(--sage);}
+  .orden-mini{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin-bottom:8px; font-size:12.5px;
+  }
+  .orden-mini b{font-size:13.5px; display:block;}
+  .orden-mini .om-meta{color:#7A8699; margin-top:2px;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(31,42,34,.45); z-index:50;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--bg); width:100%; max-width:480px; border-radius:20px 20px 0 0;
+    padding:20px 18px 26px; max-height:88vh; overflow-y:auto;
+  }
+  .modal-handle{width:38px; height:4px; background:var(--line); border-radius:3px; margin:0 auto 14px;}
+
+  .toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); padding:10px 18px; border-radius:30px;
+    font-size:12.5px; font-weight:600; z-index:60; opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .toast.show{opacity:1;}
+  /* ---------- Inicio (home) ---------- */
+  .hero{
+    background:linear-gradient(160deg,var(--green) 0%, #12264A 100%);
+    color:var(--paper); border-radius:20px; padding:26px 20px 22px; text-align:center;
+    margin-bottom:16px; position:relative; overflow:hidden;
+  }
+  .hero svg{width:104px; height:104px; display:block; margin:0 auto 8px;}
+  .hero .h-name{font-weight:800; font-size:30px; letter-spacing:.3px; line-height:1;}
+  .hero .h-name span{color:var(--amber); font-weight:500;}
+  .hero .h-tag{margin-top:8px; font-size:11.5px; font-weight:600; letter-spacing:2.2px; text-transform:uppercase; color:var(--amber);}
+  .hero .h-sub{margin-top:4px; font-size:12px; opacity:.8;}
+  .stat-title{font-size:11px; font-weight:700; color:var(--sage); text-transform:uppercase; letter-spacing:.7px; margin:18px 2px 8px;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat{
+    background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:14px 14px 12px; cursor:pointer;
+    text-align:left; font-family:inherit; color:var(--ink); display:flex; flex-direction:column; justify-content:flex-start; align-items:flex-start;
+  }
+  .stat.full{grid-column:1 / -1;}
+  .stat .n{font-size:30px; font-weight:800; line-height:1; color:var(--green);}
+  .stat .l{font-size:12.5px; font-weight:600; margin-top:6px;}
+  .stat .s{font-size:11px; color:#7A8699; margin-top:2px;}
+  .stat.warn .n{color:var(--warn);}
+  .stat.bad .n{color:var(--bad);}
+  .stat.ok .n{color:var(--ok);}
+  .home-actions{display:grid; gap:10px; margin-top:18px;}
+
+  /* ---------- Informes ---------- */
+  .inf-item{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:13px 15px; margin-bottom:10px;}
+  .inf-item .hi-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .inf-item b{font-size:14px;}
+  .inf-actions{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .inf-actions .btn{width:auto; flex:1 1 auto; min-width:30%;}
+  .btn-ghost{background:#fff; color:var(--green); border:1.5px solid var(--line);}
+  .btn-danger{background:#fff; color:var(--bad); border:1.5px solid #E7B7A8;}
+  .pill.warn{background:rgba(201,138,46,.17); color:var(--warn);}
+  .sigbox{border:1.5px solid var(--line); border-radius:10px; background:#fff; touch-action:none; display:block; width:100%; height:110px;}
+  .g-chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;}
+  .g-chips button{border:1.5px solid var(--line); background:#fff; border-radius:20px; padding:6px 12px; font-family:inherit; font-weight:600; font-size:12px; color:#7A8699; cursor:pointer;}
+  .g-chips button.on{background:var(--green); border-color:var(--green); color:var(--paper);}
+  .g-chk{display:flex; gap:10px; align-items:flex-start; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:6px; font-size:13px; cursor:pointer;}
+  .g-chk input{margin-top:3px; width:18px; height:18px; flex:0 0 auto;}
+  .g-chk small{color:#7A8699; font-size:11.5px;}
+  .seg-filter{display:flex; gap:6px; margin-bottom:12px;}
+  .seg-filter button{flex:1; border:1.5px solid var(--line); background:#fff; border-radius:10px; padding:8px 0; font-family:inherit; font-weight:600; font-size:12px; color:#7A8699; cursor:pointer;}
+  .seg-filter button.on{background:var(--green); border-color:var(--green); color:var(--paper);}
+  input[type=time]{width:100%; font-family:inherit; font-size:14px; color:var(--ink); background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:10px 12px;}
+  .inf-item .hi-date{font-size:11.5px; color:#7A8699; white-space:nowrap;}
+
+  details.extra{border:1.5px solid var(--line); border-radius:12px; background:#fff; padding:0 12px; margin-top:14px;}
+  details.extra summary{cursor:pointer; font-weight:600; font-size:13px; color:var(--green); padding:12px 0; list-style:none;}
+  details.extra summary::before{content:"＋ "; color:var(--sage);} details.extra[open] summary::before{content:"－ ";}
+  details.extra[open]{padding-bottom:12px;}
+  .lote-row{display:grid; grid-template-columns:1.2fr 1fr auto; gap:6px; align-items:center; margin-bottom:6px;}
+  .fgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .fth{position:relative; aspect-ratio:1; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#fff;}
+  .fth img{width:100%; height:100%; object-fit:cover; display:block;}
+  .fth button{position:absolute; top:4px; right:4px; width:24px; height:24px; border-radius:50%; border:none; background:rgba(22,34,58,.75); color:#fff; font-size:13px; cursor:pointer; line-height:1;}
+  .fadd{aspect-ratio:1; border:2px dashed var(--sage); border-radius:10px; background:#fff; color:var(--sage); font-family:inherit; font-weight:600; font-size:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;}
+  .fadd b{font-size:22px; line-height:1;}
+  .fstrip{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
+  .fstrip img{width:54px; height:54px; object-fit:cover; border-radius:8px; border:1px solid var(--line); cursor:pointer;}
+  #lightbox{position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:200; display:none; align-items:center; justify-content:center;}
+  #lightbox.show{display:flex;}
+  #lightbox img{max-width:96vw; max-height:88vh; border-radius:6px;}
+  #lightbox button{position:absolute; top:calc(14px + env(safe-area-inset-top)); right:16px; border:none; background:rgba(255,255,255,.18); color:#fff; font-size:22px; width:42px; height:42px; border-radius:50%; cursor:pointer;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+</head>
+<body>
+<div id="app">
+
+  <div id="loginScreen" style="position:fixed; inset:0; z-index:100; background:var(--green); display:flex; align-items:center; justify-content:center; padding:24px;">
+    <div style="max-width:340px; width:100%;">
+      <svg viewBox="0 0 120 120" width="60" height="60" style="display:block; margin:0 auto 10px;">
+        <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+        <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+        <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+      </svg>
+      <div style="text-align:center; color:var(--paper); font-weight:800; font-size:20px; margin-bottom:2px;">PG<span style="color:var(--amber); font-weight:500;">Agro</span></div>
+      <div style="text-align:center; color:var(--amber); font-size:12px; margin-bottom:22px;">Chequeos de equipos</div>
+
+      <div style="background:var(--paper); border-radius:16px; padding:18px;">
+        <div style="display:flex; gap:6px; margin-bottom:14px;">
+          <button type="button" id="tabLogin" class="btn btn-small" style="flex:1; background:var(--green); color:var(--paper);" onclick="mostrarTab('login')">Iniciar sesión</button>
+          <button type="button" id="tabRegistro" class="btn btn-small" style="flex:1; background:transparent; color:var(--green); border:1.5px solid var(--green);" onclick="mostrarTab('registro')">Crear cuenta</button>
+        </div>
+
+        <div id="bloqueLogin">
+          <label class="field-label" style="margin-top:0;">Email</label>
+          <input type="text" id="li_email" placeholder="tu@email.com">
+          <label class="field-label">Contraseña</label>
+          <input type="password" id="li_pass" placeholder="••••••••">
+          <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="hacerLogin()">Entrar</button>
+        </div>
+
+        <div id="bloqueRegistro" style="display:none;">
+          <label class="field-label" style="margin-top:0;">Nombre y apellido</label>
+          <input type="text" id="re_nombre" placeholder="Como te van a ver en la app">
+          <label class="field-label">Email</label>
+          <input type="text" id="re_email" placeholder="tu@email.com">
+          <label class="field-label">Contraseña</label>
+          <input type="password" id="re_pass" placeholder="Mínimo 6 caracteres">
+          <button class="btn btn-primary btn-block" style="margin-top:14px;" onclick="hacerRegistro()">Crear cuenta y entrar</button>
+        </div>
+
+        <div id="loginError" class="hint" style="color:#B4442E; margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gateScreen" style="display:none; position:fixed; inset:0; z-index:90; background:var(--green); align-items:center; justify-content:center; padding:24px;">
+    <div style="max-width:340px; width:100%; background:var(--paper); border-radius:16px; padding:22px; text-align:center;">
+      <div style="font-weight:800; font-size:18px; color:var(--green);" id="gateTitulo"></div>
+      <div class="hint" style="font-size:12.5px; margin:10px 0 14px; color:#4A5568;" id="gateTexto"></div>
+      <div id="gateBotones"></div>
+      <button class="btn btn-ghost btn-block" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </div>
+
+  <div id="mainScreen" style="display:none;">
+
+  <header>
+    <svg class="icon" viewBox="0 0 120 120">
+      <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+      <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+      <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+      <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+    </svg>
+    <div class="brand">
+      <b>PG<span style="color:var(--amber); font-weight:500;">Agro</span></b>
+      <span>Salida e informes</span>
+    </div>
+    <div class="today">
+      <div id="connStatus" style="font-size:10px; margin-bottom:2px;">🟡 Conectando…</div>
+      <div id="todayLabel"></div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===================== INICIO ===================== -->
+    <section class="view active" id="view-inicio">
+      <div class="hero">
+        <svg viewBox="0 0 120 120">
+          <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+          <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+          <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+        </svg>
+        <div class="h-name">PG<span>Agro</span></div>
+        <div class="h-tag">Precisión y calidad</div>
+        <div class="h-sub">Salida de la jornada e informes de aplicación</div>
+      </div>
+
+      <div class="stat-title">Informes al cliente</div>
+      <div class="stats">
+        <button class="stat full" id="st_inf_pend" onclick="showView('informes')"></button>
+      </div>
+      <div id="homeGestion"></div>
+
+      <div class="home-actions">
+        <button class="btn btn-primary" onclick="showView('salida')">🚚 Checklist de salida</button>
+        <button class="btn btn-amber" onclick="openInforme()">📄 Nuevo informe de aplicación</button>
+        <button class="btn btn-ghost" id="btnOperadores" style="display:none;" onclick="openOperadores()">👥 Operadores habilitados</button>
+      </div>
+    </section>
+
+    <!-- ===================== INFORMES ===================== -->
+    <section class="view" id="view-informes">
+      <h1 class="page-title">Planillas de aplicación</h1>
+      <button class="btn btn-primary" style="margin-bottom:12px;" onclick="openInforme()">＋ Nuevo informe</button>
+      <div class="seg-filter" id="infFiltro">
+        <button data-f="pend" class="on" onclick="setFiltroInf('pend')">Pendientes</button>
+        <button data-f="env" onclick="setFiltroInf('env')">Enviados</button>
+        <button data-f="todos" onclick="setFiltroInf('todos')">Todos</button>
+      </div>
+      <select id="infMes" onchange="setMesInf(this.value)" style="margin-bottom:6px;"></select>
+      <div class="hint" id="infResumen" style="margin:0 0 12px;"></div>
+      <div id="informesList"></div>
+    </section>
+
+    <!-- ===================== GESTIÓN (solo administradores) ===================== -->
+    <section class="view" id="view-gestion">
+      <div class="seg-filter" id="gSub">
+        <button data-v="resumen" class="on" onclick="gVista('resumen')">Resumen</button>
+        <button data-v="clientes" onclick="gVista('clientes')">Clientes</button>
+        <button data-v="trabajos" onclick="gVista('trabajos')">Trabajos</button>
+        <button data-v="insumos" onclick="gVista('insumos')">Insumos</button>
+        <button data-v="facturas" onclick="gVista('facturas')">Facturas</button>
+      </div>
+      <div id="gBody"></div>
+    </section>
+
+    <!-- ===================== SALIDA (checklist de salida + previo del admin) ===================== -->
+    <section class="view" id="view-salida">
+      <h1 class="page-title" id="salidaTitulo">Pre jornada · antes de salir del galpón</h1>
+      <div class="seg-filter" id="salidaSwitch">
+        <button data-l="op" class="on" onclick="setListaSalida('op')">Pre jornada</button>
+        <button data-l="post" onclick="setListaSalida('post')">Post jornada</button>
+        <button data-l="adm" onclick="setListaSalida('adm')" style="display:none">Previo (solo vos)</button>
+      </div>
+      <div id="salidaBody"></div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="inicio" onclick="showView('inicio')"><span class="ic">🏠</span>INICIO</button>
+    <button class="tab-btn" data-view="salida" onclick="showView('salida')"><span class="ic">🚚</span>SALIDA</button>
+    <button class="tab-btn" data-view="gestion" id="tabGestion" style="display:none;" onclick="showView('gestion')"><span class="ic">💼</span>GESTIÓN</button>
+    <button class="tab-btn" data-view="informes" onclick="showView('informes')"><span class="ic">📄</span>INFORMES</button>
+  </nav>
+
+
+  <div class="modal-overlay" id="formOverlay">
+    <div class="modal" id="formModal"></div>
+  </div>
+
+  <div class="modal-overlay" id="detailOverlay">
+    <div class="modal" id="detailModal"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="lightbox" onclick="cerrarLightbox()"><button onclick="cerrarLightbox()">✕</button><img id="lightboxImg" alt=""></div>
+  </div><!-- /mainScreen -->
+</div>
+
+<script type="module">
+/* =========================================================
+   PGAgro · Chequeos — CONFIGURACIÓN DE FIREBASE
+   =========================================================
+   Para que todos los operadores vean los mismos datos, esta
+   app usa Firebase (Firestore) como base de datos compartida
+   en tiempo real, gratis para este volumen de uso.
+
+   PASOS (una sola vez):
+   1. Anda a https://console.firebase.google.com → "Agregar proyecto"
+      → ponele un nombre (ej. "pgagro-chequeos") → creá el proyecto.
+   2. En el menú izquierdo: "Compilación" → "Firestore Database"
+      → "Crear base de datos" → modo producción → elegí una región
+      (ej. southamerica-east1) → Habilitar.
+   3. Andá a "Reglas" (dentro de Firestore) y pegá el bloque de
+      reglas que te paso más abajo en el chat → Publicar.
+   4. En el menú izquierdo: "Compilación" → "Authentication"
+      → "Comenzar" → pestaña "Sign-in method" → habilitá "Anónimo".
+   5. Anda al ícono de engranaje (arriba a la izquierda) →
+      "Configuración del proyecto" → bajá hasta "Tus apps" →
+      ícono </> (Web) → registrá una app (cualquier nombre) →
+      copiá el objeto "firebaseConfig" que te muestra.
+   6. Pegá ese objeto acá abajo, reemplazando el de ejemplo.
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBwI0QRf9LPsyAPqvwIvQrM3YuQ2Yf5I-M",
+  authDomain: "pgagro---checklist.firebaseapp.com",
+  projectId: "pgagro---checklist",
+  storageBucket: "pgagro---checklist.firebasestorage.app",
+  messagingSenderId: "777651668678",
+  appId: "1:777651668678:web:74cfdf4daba2b3468d79c7"
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, updateDoc, setDoc, deleteDoc, doc, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  updateProfile, signOut, sendEmailVerification
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+
+const fbApp = initializeApp(firebaseConfig);
+// Caché local persistente: si en el campo no hay señal, los datos cargados quedan
+// guardados en el celular y se sincronizan solos cuando vuelve la conexión.
+let db;
+try{
+  db = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+}catch(e){
+  console.warn("Caché persistente no disponible, uso modo normal:", e);
+  db = getFirestore(fbApp);
+}
+const auth = getAuth(fbApp);
+
+/* Con poca señal, la promesa de escritura de Firestore no se resuelve hasta que el
+   servidor confirma. Esperamos como máximo 3 s: la escritura ya quedó en cola local. */
+function confirmarEscritura(p){
+  return Promise.race([
+    p.then(()=>true),
+    new Promise(res=>setTimeout(()=>res(false), 3000))
+  ]);
+}
+function nuevoId(col){ return doc(collection(db,col)); }
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+const connEl = () => document.getElementById("connStatus");
+
+function currentOperadorNombre(){
+  const u = auth.currentUser;
+  if(!u) return "Desconocido";
+  return u.displayName || u.email;
+}
+
+/* Acceso cerrado: solo entran los administradores y los operadores habilitados.
+   (Los mismos criterios se hacen cumplir en las reglas de Firestore.) */
+const ADMINS = ["mngonbar@gmail.com"];
+let unsubAcceso = null, ES_ADMIN = false;
+const emailDe = u => (u.email||"").toLowerCase();
+
+function mostrarGate(titulo, texto, botonesHTML){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("mainScreen").style.display = "none";
+  document.getElementById("gateTitulo").textContent = titulo;
+  document.getElementById("gateTexto").textContent = texto;
+  document.getElementById("gateBotones").innerHTML = botonesHTML || "";
+  document.getElementById("gateScreen").style.display = "flex";
+}
+
+function entrarApp(){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("gateScreen").style.display = "none";
+  document.getElementById("mainScreen").style.display = "block";
+  if(connEl()) connEl().textContent = "🟢 " + currentOperadorNombre();
+  document.getElementById("btnOperadores").style.display = ES_ADMIN ? "block" : "none";
+  document.getElementById("tabGestion").style.display = ES_ADMIN ? "" : "none";
+  iniciarEscuchas();
+  gIniciar();
+  refrescarVistaActual();
+}
+
+onAuthStateChanged(auth, (user)=>{
+  if(unsubAcceso){ unsubAcceso(); unsubAcceso = null; }
+  ES_ADMIN = false;
+  if(typeof limpiarSalidas === "function") limpiarSalidas();
+  if(!user){
+    document.getElementById("gateScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("mainScreen").style.display = "none";
+    return;
+  }
+  if(!user.emailVerified){
+    mostrarGate("Verificá tu email",
+      "Te enviamos un mensaje a " + user.email + ". Abrilo, tocá el enlace y después volvé acá. Si no lo ves, revisá spam.",
+      `<button class="btn btn-primary btn-block" onclick="yaVerifique()">Ya verifiqué</button>
+       <button class="btn btn-outline btn-block" onclick="reenviarVerificacion()">Reenviar email</button>`);
+    return;
+  }
+  ES_ADMIN = ADMINS.includes(emailDe(user));
+  if(ES_ADMIN){ entrarApp(); return; }
+  mostrarGate("Verificando acceso…", "", "");
+  unsubAcceso = onSnapshot(doc(db,"operadores",emailDe(user)), (snap)=>{
+    if(snap.exists()) entrarApp();
+    else mostrarGate("Acceso no habilitado",
+      "Tu cuenta (" + user.email + ") todavía no está habilitada. Pedile a María Noel que te agregue desde Inicio → Operadores habilitados y volvé a abrir la app.", "");
+  }, ()=>{
+    mostrarGate("Acceso no habilitado",
+      "No se pudo confirmar el acceso de " + user.email + ". Pedile a María Noel que te habilite.", "");
+  });
+});
+
+async function yaVerifique(){
+  try{
+    await auth.currentUser.reload();
+    if(auth.currentUser.emailVerified){ location.reload(); }
+    else showToast("Todavía no figura como verificado");
+  }catch(e){ showToast("No se pudo comprobar — revisá la conexión"); }
+}
+async function reenviarVerificacion(){
+  try{ await sendEmailVerification(auth.currentUser); showToast("Email reenviado"); }
+  catch(e){ showToast("Esperá un momento antes de reenviar"); }
+}
+
+function mostrarTab(tab){
+  const esLogin = tab==="login";
+  document.getElementById("bloqueLogin").style.display = esLogin ? "block" : "none";
+  document.getElementById("bloqueRegistro").style.display = esLogin ? "none" : "block";
+  document.getElementById("tabLogin").style.background = esLogin ? "var(--green)" : "transparent";
+  document.getElementById("tabLogin").style.color = esLogin ? "var(--paper)" : "var(--green)";
+  document.getElementById("tabRegistro").style.background = esLogin ? "transparent" : "var(--green)";
+  document.getElementById("tabRegistro").style.color = esLogin ? "var(--green)" : "var(--paper)";
+  document.getElementById("loginError").textContent = "";
+}
+
+function traducirErrorAuth(codigo){
+  const mapa = {
+    "auth/invalid-email":"El email no es válido.",
+    "auth/user-not-found":"No existe una cuenta con ese email.",
+    "auth/wrong-password":"Contraseña incorrecta.",
+    "auth/invalid-credential":"Email o contraseña incorrectos.",
+    "auth/email-already-in-use":"Ya existe una cuenta con ese email — iniciá sesión en vez de crear una nueva.",
+    "auth/weak-password":"La contraseña necesita al menos 6 caracteres."
+  };
+  return mapa[codigo] || "No se pudo completar la operación. Revisá los datos e intentá de nuevo.";
+}
+
+function hacerLogin(){
+  const email = document.getElementById("li_email").value.trim();
+  const pass = document.getElementById("li_pass").value;
+  document.getElementById("loginError").textContent = "";
+  signInWithEmailAndPassword(auth, email, pass)
+    .catch(err=>{ document.getElementById("loginError").textContent = traducirErrorAuth(err.code); });
+}
+
+function hacerRegistro(){
+  const nombre = document.getElementById("re_nombre").value.trim();
+  const email = document.getElementById("re_email").value.trim();
+  const pass = document.getElementById("re_pass").value;
+  document.getElementById("loginError").textContent = "";
+  if(!nombre){ document.getElementById("loginError").textContent = "Ingresá tu nombre y apellido."; return; }
+  createUserWithEmailAndPassword(auth, email, pass)
+    .then(cred => updateProfile(cred.user, { displayName: nombre }).then(()=>sendEmailVerification(cred.user)).then(()=>location.reload()))
+    .catch(err=>{ document.getElementById("loginError").textContent = traducirErrorAuth(err.code); });
+}
+
+function cerrarSesion(){
+  signOut(auth);
+}
+
+
+/* =========================================================
+   Configuración de la matriz de chequeos
+   Editá EQUIPOS para agregar/quitar puntos, cambiar
+   frecuencias o renombrar equipos.
+   ========================================================= */
+const EQUIPOS = {
+  vehiculo: {
+    label: "Vehículo",
+    unidad: "km",
+    frecuenciaDias: 30,
+    intervaloService: 10000,
+    idsSugeridos: ["Camión KIA 4x4"],
+    puntos: [
+      "Nivel de fluidos varios","Presión de neumáticos","Funcionamiento de luces",
+      "Tomas eléctricas a acoplados","Revisión de tiro","Revisión de frenos",
+      "Botiquín","Extintor","Herramientas","Auxiliar","Estado de neumáticos","Otros"
+    ]
+  },
+  acoplado: {
+    label: "Acoplado (zorra)",
+    unidad: null,
+    frecuenciaDias: 30,
+    intervaloService: null,
+    idsSugeridos: ["Zorra"],
+    puntos: [
+      "Enganche","Cubiertas","Cadenas y mosquetones","Ejes y masas","Luces",
+      "Puertas/Barandas/Chasis","Tanques y bombas","Engrasar válvulas","Conexiones eléctricas"
+    ]
+  },
+  dron: {
+    label: "Drones",
+    unidad: "horas",
+    frecuenciaDias: 7,
+    intervaloService: 100,
+    idsSugeridos: ["XAG P150","DJI Mavic 3M"],
+    puntos: [
+      "Hélices","Motores","Tren de aterrizaje","Sistema de pulverizado","Sistema de esparcido",
+      "Baterías (limpieza gral, pines y estado de carga)","Cargador","Conexiones eléctricas y fichas"
+    ]
+  },
+  generador: {
+    label: "Generador",
+    unidad: "horas",
+    frecuenciaDias: 30,
+    intervaloService: 100,
+    idsSugeridos: ["Generador grande"],
+    puntos: [
+      "Filtro de aire","Filtro de combustible","Nivel de líquido refrigerante",
+      "Nivel de aceite","Reemplazo de filtro de aceite"
+    ]
+  }
+};
+
+const PLAZOS = ["Sin corrección","Hoy","24 horas","3 días","7 días"];
+
+/* ---------- datos compartidos en tiempo real (Firestore) ---------- */
+let STORE = { checklists: [], reportes: [], informes: [] };   // checklists y reportes quedaron fuera de la app (los datos viejos siguen guardados)
+
+function refrescarVistaActual(){
+  const activa = document.querySelector(".tab-btn.active");
+  const nombre = activa ? activa.dataset.view : "inicio";
+  if(nombre==="inicio") renderInicio();
+  if(nombre==="salida") renderSalida();
+  if(nombre==="informes") renderInformes();
+  if(nombre==="gestion") renderGestion();
+}
+
+let escuchasIniciadas = false;
+function iniciarEscuchas(){
+  if(escuchasIniciadas) return;
+  escuchasIniciadas = true;
+  // Ordenamos en el cliente: si a algún documento le faltara "fecha", una consulta
+  // con orderBy lo excluiría en silencio.
+  const ordenar = (snap)=> snap.docs.map(d=>({ id:d.id, ...d.data() }))
+      .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
+
+  onSnapshot(collection(db,"informes"), (snap)=>{
+    STORE.informes = ordenar(snap); refrescarVistaActual();
+  }, err=>console.error("informes:", err));
+}
+
+function fmtDate(d){
+  if(!d) return "—";
+  const dt = new Date(d+"T00:00:00");
+  return dt.toLocaleDateString("es-UY",{day:"2-digit",month:"2-digit",year:"numeric"});
+}
+function todayStr(){
+  const d = new Date();
+  const m = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
+  return d.getFullYear()+"-"+m+"-"+dd;
+}
+function addDays(dateStr, days){
+  const d = new Date(dateStr+"T00:00:00");
+  d.setDate(d.getDate()+days);
+  const m = String(d.getMonth()+1).padStart(2,"0"), dd = String(d.getDate()).padStart(2,"0");
+  return d.getFullYear()+"-"+m+"-"+dd;
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+"T00:00:00") - new Date(a+"T00:00:00")) / 86400000);
+}
+
+document.getElementById("todayLabel").textContent = fmtDate(todayStr());
+
+/* ---------- navegación de tabs ---------- */
+function showView(name){
+  if(name==="gestion" && !ES_ADMIN) return;
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.view===name));
+  window.scrollTo({top:0});
+  if(name==="inicio") renderInicio();
+  if(name==="salida") renderSalida();
+  if(name==="informes") renderInformes();
+  if(name==="gestion") renderGestion();
+}
+
+/* ---------- Checklists de salida (operadores) y previo (solo admin) ----------
+   Un documento por día y por lista: salidas/AAAA-MM-DD  y  salidas_adm/AAAA-MM-DD.
+   Cada ítem guarda e = 0 pendiente (rojo) · 1 en proceso (amarillo) · 2 listo (verde). */
+const LISTAS = {
+  op: { col:"salidas", titulo:"Pre jornada · antes de salir del galpón", secciones:[
+    { t:"Carga al camión / trailer", items:[
+      ["o13","Dron"],
+      ["o14","Cargadores"],
+      ["o15","Baterías"],
+      ["o16","Motobomba"],
+      ["o17","Mangueras"],
+      ["o18","Control"],
+      ["o19","EPP: guantes, máscara y ropa de trabajo"],
+      ["o20","Jarras, jeringas y vasos de medición"],
+      ["o21","Elementos personales"] ]},
+    { t:"Trabajo", items:[
+      ["o6","Orden de trabajo a mano: cliente, campo, trabajo y producto"],
+      ["o7","Producto y cantidad cargados según la orden"] ]},
+    { t:"Salida", items:[
+      ["o10","Combustible del camión y del generador"],
+      ["o11","Teléfono cargado / cargador disponible"],
+      ["o12","Camión con papeles al día"] ]}
+  ]},
+  post: { col:"salidas", titulo:"Post jornada · al volver al galpón", secciones:[
+    { t:"Equipo", items:[
+      ["x1","Dron sin daños visibles: estructura, brazos, hélices ajustadas"],
+      ["x2","Tanque limpio y boquillas sin obstruir"],
+      ["x3","Baterías cargadas y en buen estado"],
+      ["x4","Control con carga en el camión"],
+      ["x5","Cargador, generador y cables en el camión"] ]},
+    { t:"Limpieza", items:[
+      ["x6","Limpieza del generador"],
+      ["x7","Limpieza del trailer"],
+      ["x8","Limpieza del camión"],
+      ["x9","Limpieza del dron"] ]}
+  ]},
+  adm: { col:"salidas_adm", titulo:"Previo · lo que dejás listo vos (el día anterior o a primera hora)", secciones:[
+    { t:"Preparación del trabajo", items:[
+      ["a1","Orden de aplicación lista y enviada: cliente, ubicación, cultivo, producto y dosis"],
+      ["a2","Confirmación del cliente: fecha, acceso al campo y contacto"],
+      ["a3","Pronóstico revisado: viento, lluvia y temperatura"],
+      ["a4","Productos y cantidades disponibles en el galpón"],
+      ["a5","Operador asignado y equipo disponible"] ]},
+    { t:"Equipos al día", items:[
+      ["a6","Chequeo semanal de los drones registrado en la app"],
+      ["a7","Baterías en carga desde la noche anterior"],
+      ["a8","Mantenimiento pendiente resuelto o equipo marcado como no disponible"],
+      ["a9","Repuestos de uso corriente en el carro: hélices, boquillas y baterías de repuesto"] ]},
+    { t:"Papeles", items:[
+      ["a10","RUO, REA y registros vigentes"],
+      ["a11","Seguros al día"],
+      ["a12","Informe del trabajo anterior enviado al cliente"] ]}
+  ]}
+};
+const SAL = { vista:"op", fecha:null, data:{ op:{}, post:{}, adm:{} }, cfg:{}, unsub:[] };
+
+function limpiarSalidas(){
+  SAL.unsub.forEach(u=>{ try{ u(); }catch(e){} });
+  SAL.unsub = []; SAL.fecha = null; SAL.data = { op:{}, post:{}, adm:{} }; SAL.cfg = {}; SAL.vista = "op";
+}
+function salidaActiva(){
+  const v = document.getElementById("view-salida");
+  return !!(v && v.classList.contains("active"));
+}
+function suscribirSalidas(){
+  const hoy = todayStr();
+  if(SAL.fecha === hoy) return;
+  SAL.unsub.forEach(u=>{ try{ u(); }catch(e){} });
+  SAL.unsub = []; SAL.fecha = hoy; SAL.data = { op:{}, post:{}, adm:{} };
+  const alerta = n => err=>console.error(n+":", err);
+  SAL.unsub.push(onSnapshot(doc(db,"salidas",hoy), s=>{
+    SAL.data.op = (s.exists() && s.data().items) || {};
+    if(salidaActiva()) renderSalida();
+  }, alerta("salidas")));
+  SAL.unsub.push(onSnapshot(doc(db,"salidas","post-"+hoy), s=>{
+    SAL.data.post = (s.exists() && s.data().items) || {};
+    if(salidaActiva()) renderSalida();
+  }, alerta("salidas/post")));
+  SAL.unsub.push(onSnapshot(doc(db,"salidas","config"), s=>{
+    SAL.cfg = s.exists() ? s.data() : {};
+    if(salidaActiva()) renderSalida();
+  }, alerta("salidas/config")));
+  if(ES_ADMIN){
+    SAL.unsub.push(onSnapshot(doc(db,"salidas_adm",hoy), s=>{
+      SAL.data.adm = (s.exists() && s.data().items) || {};
+      if(salidaActiva()) renderSalida();
+    }, alerta("salidas_adm")));
+  }
+}
+
+function docSalida(lista){ return lista==="post" ? "post-"+SAL.fecha : SAL.fecha; }
+function setListaSalida(l){
+  if(l==="adm" && !ES_ADMIN) return;
+  SAL.vista = l; renderSalida();
+}
+
+function renderSalida(){
+  if(!document.getElementById("salidaBody")) return;
+  suscribirSalidas();
+  if(!ES_ADMIN && SAL.vista==="adm") SAL.vista = "op";
+  const sw = document.getElementById("salidaSwitch");
+  sw.querySelector('[data-l="adm"]').style.display = ES_ADMIN ? "" : "none";
+  sw.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.l===SAL.vista));
+  const lista = SAL.vista, L = LISTAS[lista], d = SAL.data[lista] || {};
+  document.getElementById("salidaTitulo").textContent = L.titulo;
+
+  let total = 0, ok = 0, proc = 0;
+  L.secciones.forEach(s=>s.items.forEach(it=>{ total++; const e=(d[it[0]]||{}).e||0; if(e===2) ok++; if(e===1) proc++; }));
+  const pct = total ? Math.round(ok*100/total) : 0;
+
+  let h = `<div class="sal-prog"><div class="t"><span>${ok} de ${total} listos${proc?` · ${proc} en proceso`:""}</span><span>${pct}%</span></div>
+    <div class="sal-bar"><i style="width:${pct}%"></i></div></div>
+    <div class="sal-leyenda"><span class="r">Pendiente</span><span class="a">En proceso</span><span class="v">Listo</span></div>`;
+  L.secciones.forEach(s=>{
+    h += `<div class="sal-sec">${esc(s.t)}</div>`;
+    s.items.forEach(([k,txt,extra])=>{
+      const it = d[k] || {}, e = it.e||0;
+      const estado = e===2 ? "Listo" : e===1 ? "En proceso" : "Pendiente";
+      const meta = e ? `<div class="sal-meta">${estado}${it.p?" · "+esc(it.p):""}${it.h?" · "+esc(it.h):""}</div>` : "";
+      const hint = "";
+      h += `<div class="sal-row">
+        <button type="button" class="sal-main s${e}" aria-label="${esc(txt)} — ${estado}" onclick="tocarItem('${lista}','${k}')">
+          <span class="sal-chk">${e===2?"✓":""}</span>
+          <span><div class="sal-txt">${esc(txt)}</div>${hint}${meta}</span>
+        </button>
+        <button type="button" class="sal-proc${e===1?" on":""}" aria-label="Marcar en proceso: ${esc(txt)}" onclick="procesoItem('${lista}','${k}')"><i></i></button>
+      </div>`;
+    });
+  });
+  h += `<button class="btn btn-outline" style="margin-top:14px;" onclick="reiniciarLista('${lista}')">↺ Reiniciar lista (todo a pendiente)</button>`;
+  document.getElementById("salidaBody").innerHTML = h;
+}
+
+async function guardarItem(lista, k, val){
+  if(lista==="adm" && !ES_ADMIN) return;
+  suscribirSalidas();
+  SAL.data[lista][k] = val; renderSalida();
+  const ref = doc(db, LISTAS[lista].col, docSalida(lista));
+  try{
+    const ok = await confirmarEscritura(setDoc(ref, { fecha:SAL.fecha, items:{ [k]: val } }, { merge:true }));
+    if(!ok) showToast("Sin señal: se guarda al reconectar");
+  }catch(e){ console.error(e); showToast("No se pudo guardar — revisá la conexión"); }
+}
+function horaAhora(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+function cambiarEstado(lista, k, nuevo){
+  const val = nuevo===0 ? { e:0 } : { e:nuevo, p:currentOperadorNombre(), h:horaAhora() };
+  guardarItem(lista, k, val);
+}
+// Un toque: pendiente/en proceso → listo; listo → pendiente
+function tocarItem(lista, k){
+  const e = ((SAL.data[lista]||{})[k]||{}).e||0;
+  cambiarEstado(lista, k, e===2 ? 0 : 2);
+}
+// Botón amarillo: en proceso (otro toque lo devuelve a pendiente)
+function procesoItem(lista, k){
+  const e = ((SAL.data[lista]||{})[k]||{}).e||0;
+  cambiarEstado(lista, k, e===1 ? 0 : 1);
+}
+async function reiniciarLista(lista){
+  if(lista==="adm" && !ES_ADMIN) return;
+  if(!confirm("¿Dejar toda la lista en pendiente?")) return;
+  suscribirSalidas();
+  SAL.data[lista] = {}; renderSalida();
+  const ref = doc(db, LISTAS[lista].col, docSalida(lista));
+  try{ await confirmarEscritura(setDoc(ref, { fecha:SAL.fecha, items:{} })); }
+  catch(e){ console.error(e); showToast("No se pudo reiniciar — revisá la conexión"); }
+}
+
+/* ---------- estado por tipo de equipo ---------- */
+function lastChecklistFor(tipo){
+  const items = STORE.checklists.filter(c=>c.tipo===tipo).sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  return items[0] || null;
+}
+
+function statusFor(tipo){
+  const last = lastChecklistFor(tipo);
+  if(!last) return {dot:"grey", label:"Sin registrar", next:null};
+  const hoy = todayStr();
+  const diff = daysBetween(hoy, last.proximoChequeo);
+  if(diff < 0) return {dot:"bad", label:"Vencido", next:last.proximoChequeo, last};
+  if(diff <= 3) return {dot:"warn", label:"Próximo a vencer", next:last.proximoChequeo, last};
+  return {dot:"ok", label:"Al día", next:last.proximoChequeo, last};
+}
+
+function problemasAbiertos(){ return STORE.reportes.filter(r=>!r.resuelto); }
+
+function alertasHTML(max){
+  let abiertos = problemasAbiertos();
+  const total = abiertos.length;
+  if(max) abiertos = abiertos.slice(0,max);
+  return abiertos.map(r=>`
+    <div class="alert-card">
+      <b>${esc(r.equipo)} · ${esc(r.estado)}</b>
+      <span>${esc(r.detalle)}</span>
+    </div>
+  `).join("") + (max && total>max ? `<div class="hint" style="margin:-4px 0 10px;">y ${total-max} más sin resolver — mirá el Historial.</div>` : "");
+}
+
+/* ---------- INICIO ---------- */
+function renderInicio(){
+  const infPend = STORE.informes.filter(i=>!i.enviado).length;
+  const el = document.getElementById("st_inf_pend");
+  el.className = "stat full " + (infPend>0 ? "warn" : "ok");
+  el.innerHTML = `<div class="n">${infPend}</div><div class="l">Informes pendientes de enviar</div><div class="s">${infPend>0 ? "para mandar al cliente al cierre del trabajo" : "todo enviado"}</div>`;
+  const hg = document.getElementById("homeGestion");
+  if(ES_ADMIN && typeof gStatsHTML==="function"){
+    hg.innerHTML = `<div class="stat-title">Gestión · solo vos</div>` + gStatsHTML();
+  }else hg.innerHTML = "";
+}
+
+/* ---------- CHEQUEOS: checklist de salida ---------- */
+function renderChequeos(){
+  document.getElementById("reportAlerts").innerHTML = alertasHTML();
+
+  const el = document.getElementById("hoyList");
+  el.innerHTML = "";
+  Object.keys(EQUIPOS).forEach(tipo=>{
+    const cfg = EQUIPOS[tipo];
+    const st = statusFor(tipo);
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-row">
+        <span class="dot ${st.dot}"></span>
+        <div>
+          <div class="card-title">${cfg.label}</div>
+          <div class="card-sub">${st.label}${st.last ? " · " + esc(st.last.equipo) : ""}</div>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${st.last ? "Último chequeo: " + fmtDate(st.last.fecha) + " · Próximo: " + fmtDate(st.next) : "Todavía no se registró ningún chequeo."}
+      </div>
+      <button class="btn btn-primary btn-block" onclick="openForm('${tipo}')">Realizar chequeo</button>
+    `;
+    el.appendChild(card);
+  });
+}
+
+/* ---------- Formulario de chequeo ---------- */
+let currentTipo = null;
+
+function openForm(tipo){
+  currentTipo = tipo;
+  const cfg = EQUIPOS[tipo];
+  const modal = document.getElementById("formModal");
+
+  const unidadLabel = cfg.unidad === "km" ? "Kilómetros" : cfg.unidad === "horas" ? "Horas" : null;
+
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Chequeo de ${cfg.label.toLowerCase()}</h1>
+
+    <label class="field-label">Equipo</label>
+    <input type="text" id="f_equipo" list="dl_${tipo}" placeholder="Nombre o identificador">
+    <datalist id="dl_${tipo}">${cfg.idsSugeridos.map(x=>`<option value="${x}">`).join("")}</datalist>
+
+    <div class="row2">
+      <div>
+        <label class="field-label">Fecha del chequeo</label>
+        <input type="date" id="f_fecha" value="${todayStr()}">
+      </div>
+      <div>
+        <label class="field-label">Realizado por</label>
+        <input type="text" id="f_realizador" placeholder="Nombre">
+      </div>
+    </div>
+
+    ${unidadLabel ? `
+    <div class="row2">
+      <div>
+        <label class="field-label">${unidadLabel} actuales</label>
+        <input type="number" id="f_actuales" min="0" placeholder="0">
+      </div>
+      <div>
+        <label class="field-label">${unidadLabel} último service</label>
+        <input type="number" id="f_ultimoservice" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="hint" id="serviceHint"></div>
+    ` : ""}
+
+    <div class="section-divider">Puntos a revisar</div>
+    <div id="pointsWrap">
+      ${cfg.puntos.map((p,i)=>`
+        <div class="point" data-idx="${i}">
+          <div class="point-name">${p}</div>
+          <div class="seg">
+            <button type="button" data-val="OK" onclick="setEstado(${i},'OK',this)">✓ OK</button>
+            <button type="button" data-val="X" onclick="setEstado(${i},'X',this)">✕ Falla</button>
+            <button type="button" data-val="NC" onclick="setEstado(${i},'NC',this)">NC</button>
+          </div>
+          <textarea placeholder="Observaciones (opcional)" id="obs_${i}"></textarea>
+          <div class="plazo">
+            <label class="field-label" style="margin:8px 0 4px;">Plazo de corrección</label>
+            <select id="plazo_${i}">
+              ${PLAZOS.map(p=>`<option value="${p}">${p}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="saveChecklist()">Guardar chequeo</button>
+  `;
+
+  currentEstados = {};
+  document.getElementById("formOverlay").classList.add("show");
+
+  if(unidadLabel){
+    const hint = document.getElementById("serviceHint");
+    const upd = ()=>{
+      const act = parseFloat(document.getElementById("f_actuales").value)||0;
+      const ult = parseFloat(document.getElementById("f_ultimoservice").value)||0;
+      const rest = cfg.intervaloService - (act-ult);
+      if(act>0 && ult>0){
+        hint.textContent = rest<=0
+          ? "⚠ Service vencido según los " + unidadLabel.toLowerCase() + " cargados."
+          : "Faltan aprox. " + Math.round(rest) + " " + unidadLabel.toLowerCase() + " para el próximo service (cada " + cfg.intervaloService + ").";
+      } else hint.textContent = "";
+    };
+    document.getElementById("f_actuales").addEventListener("input", upd);
+    document.getElementById("f_ultimoservice").addEventListener("input", upd);
+  }
+}
+
+let currentEstados = {};
+function setEstado(idx, val, btn){
+  currentEstados[idx] = val;
+  const seg = btn.parentElement;
+  seg.querySelectorAll("button").forEach(b=>b.classList.remove("on-ok","on-x","on-nc"));
+  btn.classList.add(val==="OK"?"on-ok":val==="X"?"on-x":"on-nc");
+}
+
+function closeForm(){
+  document.getElementById("formOverlay").classList.remove("show");
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+
+function saveChecklist(){
+  const cfg = EQUIPOS[currentTipo];
+  const equipo = document.getElementById("f_equipo").value.trim() || cfg.idsSugeridos[0] || cfg.label;
+  const fecha = document.getElementById("f_fecha").value || todayStr();
+  const realizador = document.getElementById("f_realizador").value.trim();
+
+  let actuales = null, ultimoService = null;
+  if(cfg.unidad){
+    actuales = parseFloat(document.getElementById("f_actuales").value)||0;
+    ultimoService = parseFloat(document.getElementById("f_ultimoservice").value)||0;
+  }
+
+  const puntos = cfg.puntos.map((nombre,i)=>({
+    nombre,
+    estado: currentEstados[i] || "NC",
+    observaciones: document.getElementById("obs_"+i).value.trim(),
+    plazo: document.getElementById("plazo_"+i).value
+  }));
+
+  const proximoChequeo = addDays(fecha, cfg.frecuenciaDias);
+
+  const nuevoChequeo = {
+    tipo: currentTipo, equipo, fecha, realizador,
+    operador: currentOperadorNombre(),
+    actuales, ultimoService, intervaloService: cfg.intervaloService,
+    unidad: cfg.unidad, proximoChequeo, puntos, createdAt: serverTimestamp()
+  };
+  closeForm();
+  confirmarEscritura(setDoc(nuevoId("checklists"), nuevoChequeo))
+    .then(()=>{
+      showToast("Chequeo guardado · próximo el " + fmtDate(proximoChequeo));
+      showView("chequeos");
+    })
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+/* números con coma o punto decimal */
+const pn = v => { const n = parseFloat(String(v==null?"":v).replace(",",".")); return isNaN(n)?0:n; };
+const normNum = v => { const t = String(v||"").trim().replace(",","."); return t==="" || isNaN(parseFloat(t)) ? "" : t; };
+const fmtNum = v => { const t = String(v==null?"":v).trim(); return t==="" ? "" : (isNaN(parseFloat(t)) ? t : parseFloat(t).toLocaleString("es-UY",{maximumFractionDigits:4})); };
+
+/* ---------- fotos (hasta 6, comprimidas, guardadas dentro del documento) ---------- */
+const MAX_FOTOS = 6, MAX_CHARS = 900000;   // el documento de Firestore admite ~1 MB en total
+let fotosForm = [];
+const totalChars = () => fotosForm.reduce((n,f)=>n+f.length,0);
+
+function renderFotosGrid(){
+  const el = document.getElementById("fotosGrid");
+  if(!el) return;
+  el.innerHTML = fotosForm.map((f,i)=>`<div class="fth"><img src="${f}" onclick="verFotoForm(${i})" alt=""><button type="button" onclick="quitarFoto(${i})">✕</button></div>`).join("")
+    + (fotosForm.length<MAX_FOTOS ? `<button type="button" class="fadd" onclick="document.getElementById('fotoInput').click()"><b>＋</b>Foto ${fotosForm.length}/${MAX_FOTOS}</button>` : "");
+}
+function comprimirFoto(file, lado, calidad){
+  return new Promise((res,rej)=>{
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = ()=>{
+      const k = Math.min(1, lado/Math.max(img.width,img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", calidad));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error("imagen no válida")); };
+    img.src = url;
+  });
+}
+async function agregarFotos(input){
+  const files = [...input.files]; input.value = "";
+  for(const f of files){
+    if(fotosForm.length>=MAX_FOTOS){ showToast("Máximo "+MAX_FOTOS+" fotos"); break; }
+    try{
+      let d = await comprimirFoto(f, 1000, 0.72);
+      if(d.length>200000) d = await comprimirFoto(f, 800, 0.6);
+      if(totalChars()+d.length>MAX_CHARS){ showToast("No entran más fotos en este reporte"); break; }
+      fotosForm.push(d); renderFotosGrid();
+    }catch(e){ showToast("No se pudo cargar una de las imágenes"); }
+  }
+}
+function quitarFoto(i){ fotosForm.splice(i,1); renderFotosGrid(); }
+function fotosBloque(){
+  return `<label class="field-label">Fotos (hasta ${MAX_FOTOS})</label>
+    <div class="fgrid" id="fotosGrid"></div>
+    <input type="file" id="fotoInput" accept="image/*" multiple style="display:none" onchange="agregarFotos(this)">`;
+}
+function mostrarLightbox(src){ document.getElementById("lightboxImg").src = src; document.getElementById("lightbox").classList.add("show"); }
+function cerrarLightbox(){ document.getElementById("lightbox").classList.remove("show"); }
+function verFotoForm(i){ mostrarLightbox(fotosForm[i]); }
+function verFoto(col, id, i){
+  const it = (col==="reportes"?STORE.reportes:STORE.informes).find(x=>x.id===id);
+  if(it && it.fotos && it.fotos[i]) mostrarLightbox(it.fotos[i]);
+}
+const tiraFotos = (col,it)=> (it.fotos&&it.fotos.length) ? `<div class="fstrip">${it.fotos.map((f,i)=>`<img src="${f}" onclick="verFoto('${col}','${it.id}',${i})" alt="">`).join("")}</div>` : "";
+
+/* ---------- Historial ---------- */
+function renderHistorial(){
+  const el = document.getElementById("histList");
+  const items = [...STORE.checklists].sort((a,b)=> b.fecha.localeCompare(a.fecha));
+  if(items.length===0){
+    el.innerHTML = `<div class="empty"><b>Todavía no hay chequeos guardados.</b>Realizá el primero desde la pestaña Chequeos.</div>`;
+  }else{
+    el.innerHTML = items.map(it=>{
+      const ok = it.puntos.filter(p=>p.estado==="OK").length;
+      const x = it.puntos.filter(p=>p.estado==="X").length;
+      const nc = it.puntos.filter(p=>p.estado==="NC").length;
+      return `
+        <div class="hist-item" onclick="openDetail('${it.id}')">
+          <div class="hi-top">
+            <b>${EQUIPOS[it.tipo] ? EQUIPOS[it.tipo].label : esc(it.tipo)} — ${esc(it.equipo)}</b>
+            <span class="hi-date">${fmtDate(it.fecha)}</span>
+          </div>
+          <div class="hi-summary">
+            <span class="pill ok">${ok} OK</span>
+            ${x>0 ? `<span class="pill bad">${x} falla${x>1?"s":""}</span>` : ""}
+            ${nc>0 ? `<span class="pill nc">${nc} NC</span>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  const repEl = document.getElementById("reportesList");
+  const reportes = [...STORE.reportes].sort((a,b)=>{
+    if(!!a.resuelto !== !!b.resuelto) return a.resuelto ? 1 : -1;   // sin resolver primero
+    return b.fecha.localeCompare(a.fecha);
+  });
+  if(reportes.length===0){
+    repEl.innerHTML = `<div class="empty"><b>No hay problemas reportados.</b>Podés cargar uno desde Inicio o Chequeos.</div>`;
+  }else{
+    repEl.innerHTML = reportes.map(r=>`
+      <div class="hist-item" style="cursor:default; ${r.resuelto?'opacity:.78;':''}">
+        <div class="hi-top">
+          <b>${esc(r.equipo)}</b>
+          <span class="hi-date">${fmtDate(r.fecha)}</span>
+        </div>
+        <div class="hi-summary">
+          <span class="pill ${r.estado==='Puede continuar'?'ok':r.estado==='Equipo detenido'?'bad':'nc'}">${esc(r.estado)}</span>
+          ${r.resuelto ? `<span class="pill ok">✓ Resuelto ${r.resueltoFecha?fmtDate(r.resueltoFecha):""}</span>` : `<span class="pill warn">Sin resolver</span>`}
+        </div>
+        <div class="hi-summary" style="margin-top:6px;">${esc(r.detalle)}</div>
+        ${tiraFotos("reportes", r)}
+        <div class="inf-actions">
+          ${r.resuelto
+            ? `<button class="btn btn-ghost btn-small" onclick="resolverReporte('${r.id}', false)">↩ Reabrir</button>`
+            : `<button class="btn btn-primary btn-small" onclick="resolverReporte('${r.id}', true)">✓ Marcar resuelto</button>`}
+          <button class="btn btn-danger btn-small" onclick="eliminarReporte('${r.id}')">🗑 Eliminar</button>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+async function resolverReporte(id, valor){
+  const datos = valor
+    ? { resuelto:true, resueltoFecha:todayStr(), resueltoPor:currentOperadorNombre() }
+    : { resuelto:false, resueltoFecha:null, resueltoPor:null };
+  try{
+    await confirmarEscritura(updateDoc(doc(db,"reportes",id), datos));
+    showToast(valor ? "Problema marcado como resuelto" : "Problema reabierto");
+  }catch(err){ console.error(err); showToast("No se pudo actualizar — revisá la conexión"); }
+}
+
+async function eliminarReporte(id){
+  if(!confirm("¿Eliminar este reporte de problema? No se puede deshacer.")) return;
+  try{
+    await confirmarEscritura(deleteDoc(doc(db,"reportes",id)));
+    showToast("Reporte eliminado");
+  }catch(err){ console.error(err); showToast("No se pudo eliminar — revisá la conexión"); }
+}
+
+/* ==========================================================
+   INFORMES — reporte de cierre de trabajo para enviar al cliente
+   ========================================================== */
+let FILTRO_INF = "pend";
+let MES_INF = todayStr().slice(0,7);
+function setFiltroInf(f){
+  FILTRO_INF = f;
+  renderInformes();
+}
+function setMesInf(m){ MES_INF = m; renderInformes(); }
+
+function renderInformes(){
+  document.querySelectorAll("#infFiltro button").forEach(b=>b.classList.toggle("on", b.dataset.f===FILTRO_INF));
+  const el = document.getElementById("informesList");
+  // selector de mes: así al cierre de cada mes se ve qué trabajos se hicieron
+  const meses = [...new Set([todayStr().slice(0,7), ...STORE.informes.map(i=>(i.fecha||"").slice(0,7)).filter(Boolean)])].sort().reverse();
+  const nomMes = m => { const t = new Date(m+"-01T00:00:00").toLocaleDateString("es-UY",{month:"long",year:"numeric"}); return t.charAt(0).toUpperCase()+t.slice(1); };
+  if(MES_INF!=="todos" && !meses.includes(MES_INF)) MES_INF = meses[0];
+  const selMes = document.getElementById("infMes");
+  selMes.innerHTML = `<option value="todos">Todos los meses</option>` + meses.map(m=>`<option value="${m}" ${m===MES_INF?"selected":""}>${nomMes(m)}</option>`).join("");
+  selMes.value = MES_INF;
+  let items = [...STORE.informes];
+  if(MES_INF!=="todos") items = items.filter(i=>(i.fecha||"").startsWith(MES_INF));
+  const totHa = items.reduce((n,i)=>n+pn(i.supAplicada),0);
+  document.getElementById("infResumen").textContent = items.length + " informe" + (items.length===1?"":"s") + (MES_INF!=="todos"?" en "+nomMes(MES_INF).toLowerCase():"") + (totHa>0 ? " · " + fmtNum(Math.round(totHa*100)/100) + " ha aplicadas" : "");
+  if(FILTRO_INF==="pend") items = items.filter(i=>!i.enviado);
+  if(FILTRO_INF==="env") items = items.filter(i=>i.enviado);
+  if(items.length===0){
+    el.innerHTML = `<div class="empty"><b>${FILTRO_INF==="env"?"Todavía no marcaste informes como enviados.":FILTRO_INF==="pend"?"No hay informes pendientes de enviar.":"Todavía no hay informes."}</b>Al terminar un trabajo, cargá el informe con el botón “Nuevo informe”.</div>`;
+    return;
+  }
+  el.innerHTML = items.map(i=>`
+    <div class="inf-item">
+      <div class="hi-top">
+        <div>
+          <b>${esc(i.cliente || i.campo || "Sin cliente")}</b>
+          <div class="card-sub">${esc([i.cliente?i.campo:"", i.localidad].filter(Boolean).join(" · "))}</div>
+        </div>
+        <span class="hi-date">${fmtDate(i.fecha)}</span>
+      </div>
+      <div class="hi-summary">
+        ${i.enviado
+          ? `<span class="pill ok">✓ Enviado ${i.enviadoFecha?fmtDate(i.enviadoFecha):""}</span>`
+          : `<span class="pill warn">${i.borrador ? "Falta completar" : "Pendiente de enviar"}</span>`}
+        ${i.supAplicada ? `<span class="pill nc">${esc(fmtNum(i.supAplicada))} ha</span>` : ""}
+        ${i.cultivo ? `<span class="pill nc">${esc(i.cultivo)}</span>` : ""}
+        ${i.objetivo ? `<span class="pill nc">${esc(i.objetivo)}</span>` : ""}
+      </div>
+      ${tiraFotos("informes", i)}
+      <div class="inf-actions">
+        <button class="btn btn-primary btn-small" onclick="pdfInforme('${i.id}')">📄 PDF</button>
+        <button class="btn btn-ghost btn-small" onclick="openInforme('${i.id}')">✏️ Editar</button>
+        <button class="btn btn-ghost btn-small" onclick="marcarEnviado('${i.id}', ${i.enviado?"false":"true"})">${i.enviado?"↩ Desmarcar":"✓ Marcar enviado"}</button>
+        <button class="btn btn-danger btn-small" onclick="eliminarInforme('${i.id}')">🗑</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ---------- formulario ---------- */
+let informeEditandoId = null;
+function openInforme(id){
+  informeEditandoId = id || null;
+  const i = id ? STORE.informes.find(x=>x.id===id) : null;
+  if(id && !i) return;
+  const v = (k, def="") => esc(i && i[k]!=null ? i[k] : def);
+  const modal = document.getElementById("formModal");
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">${i?"Editar planilla de aplicación":"Planilla de aplicación"}</h1>
+
+    <label class="field-label" style="margin-top:0;">Cliente</label>
+    <input type="text" id="i_cliente" value="${v("cliente")}" placeholder="Nombre del cliente">
+    <div class="row2">
+      <div><label class="field-label">Fecha</label><input type="date" id="i_fecha" value="${v("fecha", todayStr())}"></div>
+      <div><label class="field-label">Encargado</label><input type="text" id="i_encargado" value="${v("encargado", currentOperadorNombre())}"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Localidad</label><input type="text" id="i_localidad" value="${v("localidad")}"></div>
+      <div><label class="field-label">Campo</label><input type="text" id="i_campo" value="${v("campo")}"></div>
+    </div>
+    <label class="field-label">Equipo</label><input type="text" id="i_equipo" list="dl_inf_equipo" value="${v("equipo")}">
+    <datalist id="dl_inf_equipo">${EQUIPOS.dron.idsSugeridos.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
+
+    <div class="section-divider"></div>
+    <div class="row2">
+      <div><label class="field-label" style="margin-top:0;">Cultivo</label><input type="text" id="i_cultivo" value="${v("cultivo")}"></div>
+      <div><label class="field-label" style="margin-top:0;">Objetivo</label><input type="text" id="i_objetivo" value="${v("objetivo")}"></div>
+    </div>
+    <label class="field-label">Superficie aplicada (ha)</label>
+    <input type="text" inputmode="decimal" id="i_supaplic" value="${v("supAplicada")}" placeholder="Ej: 112,5">
+    <div class="row2">
+      <div><label class="field-label">Hora inicio</label><input type="time" id="i_hini" value="${v("horaInicio")}"></div>
+      <div><label class="field-label">Hora fin</label><input type="time" id="i_hfin" value="${v("horaFin")}"></div>
+    </div>
+    <label class="field-label">Comentario</label>
+    <textarea id="i_comentario" style="min-height:70px;">${v("comentario")}</textarea>
+
+    <details class="extra" ${tieneExtra(i)?"open":""}>
+      <summary>Registro del cliente (opcional)</summary>
+      <div class="hint" style="margin:0 0 4px;">Completalo solo si este cliente lo pide. Lo que dejes en blanco no aparece en el PDF.</div>
+      <div class="row2">
+        <div><label class="field-label" style="margin-top:6px;">Firma</label><input type="text" id="x_firma" value="${v("cFirma")}"></div>
+        <div><label class="field-label" style="margin-top:6px;">Establecimiento</label><input type="text" id="x_estab" value="${v("establec")}"></div>
+      </div>
+      <label class="field-label">Lotes y hectáreas</label>
+      <div id="lotesBox"></div>
+      <button type="button" class="btn btn-ghost btn-small" onclick="addLote()">＋ Agregar lote</button>
+      <div class="hint" id="lotesTotal"></div>
+      <div class="row2">
+        <div><label class="field-label">Etapa</label><input type="text" id="x_etapa" value="${v("etapa")}"></div>
+        <div><label class="field-label">Orden</label><input type="text" id="x_orden" value="${v("orden")}"></div>
+      </div>
+      <label class="field-label">Dosis de productos</label>
+      <textarea id="x_dosis" style="min-height:64px;" placeholder="Ej: Glifosato 4 L/ha, Aceite 1 L/ha…">${v("dosis")}</textarea>
+      <label class="field-label">Operador</label><input type="text" id="x_operador" value="${v("operadorAp")}">
+    </details>
+    ${fotosBloque()}
+
+    <button class="btn btn-primary btn-block" style="margin-top:18px;" onclick="guardarInforme()">${i?"Guardar cambios":"Guardar planilla"}</button>
+  `;
+  fotosForm = i && i.fotos ? [...i.fotos] : []; renderFotosGrid();
+  (i && i.lotes && i.lotes.length ? i.lotes : []).forEach(l=>addLote(l.lote, l.has));
+  document.getElementById("formOverlay").classList.add("show");
+}
+
+const tieneExtra = i => !!(i && (i.cFirma||i.establec||i.etapa||i.orden||i.dosis||i.operadorAp||(i.lotes&&i.lotes.length)));
+function addLote(lote="", has=""){
+  const box = document.getElementById("lotesBox"); if(!box) return;
+  const d = document.createElement("div"); d.className = "lote-row";
+  d.innerHTML = `<input type="text" class="l-lote" placeholder="Lote" value="${esc(lote)}"><input type="text" inputmode="decimal" class="l-has" placeholder="Has" value="${esc(has)}" oninput="sumarLotes()"><button type="button" class="rm-btn" onclick="rmLote(this)">✕</button>`;
+  box.appendChild(d); sumarLotes();
+}
+function rmLote(btn){ btn.parentElement.remove(); sumarLotes(); }
+function sumarLotes(){
+  const t = [...document.querySelectorAll("#lotesBox .l-has")].reduce((n,e)=>n+pn(e.value),0);
+  const el = document.getElementById("lotesTotal");
+  if(el) el.textContent = t>0 ? "Total de lotes: "+fmtNum(Math.round(t*100)/100)+" ha" : "";
+}
+function leerLotes(){
+  return [...document.querySelectorAll("#lotesBox .lote-row")].map(r=>({ lote:r.querySelector(".l-lote").value.trim(), has:normNum(r.querySelector(".l-has").value.trim()) }))
+    .filter(l=>l.lote||l.has);
+}
+
+async function guardarInforme(){
+  const g = id => document.getElementById(id).value.trim();
+  const campo = g("i_campo"), cliente = g("i_cliente");
+  if(!cliente && !campo){ showToast("Indicá al menos el cliente o el campo"); return; }
+  const datos = {
+    fecha: g("i_fecha") || todayStr(), cliente, localidad: g("i_localidad"), campo,
+    encargado: g("i_encargado"), equipo: g("i_equipo"),
+    cultivo: g("i_cultivo"), objetivo: g("i_objetivo"),
+    supAplicada: normNum(g("i_supaplic")),
+    horaInicio: g("i_hini"), horaFin: g("i_hfin"), comentario: g("i_comentario"), fotos: fotosForm,
+    cFirma: g("x_firma"), establec: g("x_estab"), etapa: g("x_etapa"), orden: g("x_orden"), dosis: g("x_dosis"), operadorAp: g("x_operador"), lotes: leerLotes(), borrador: false,
+    updatedAt: serverTimestamp()
+  };
+  const id = informeEditandoId;
+  closeForm();
+  try{
+    if(id){
+      await confirmarEscritura(updateDoc(doc(db,"informes",id), datos));
+    }else{
+      const ref = nuevoId("informes");
+      await confirmarEscritura(setDoc(ref, { ...datos, enviado:false, enviadoFecha:null, operador:currentOperadorNombre(), createdAt:serverTimestamp() }));
+    }
+    showToast(id ? "Planilla actualizada" : "Planilla guardada");
+    showView("informes");
+  }catch(err){ console.error(err); showToast("No se pudo guardar — revisá la conexión"); }
+}
+
+async function marcarEnviado(id, valor){
+  try{
+    await confirmarEscritura(updateDoc(doc(db,"informes",id), { enviado:valor, enviadoFecha: valor ? todayStr() : null, updatedAt:serverTimestamp() }));
+    showToast(valor ? "Marcado como enviado" : "Vuelve a pendiente");
+  }catch(err){ console.error(err); showToast("No se pudo actualizar — revisá la conexión"); }
+}
+
+async function eliminarInforme(id){
+  if(!confirm("¿Eliminar este informe? No se puede deshacer.")) return;
+  try{
+    await confirmarEscritura(deleteDoc(doc(db,"informes",id)));
+    showToast("Informe eliminado");
+  }catch(err){ console.error(err); showToast("No se pudo eliminar — revisá la conexión"); }
+}
+
+/* ---------- PDF para el cliente ---------- */
+function htmlInforme(i){
+  const celda = (l, val, suf="")=>`
+    <td style="width:50%; padding:7px 10px; border-bottom:1px solid #D7DEE6; vertical-align:top;">
+      <div style="font-size:9px; font-weight:600; color:#5C7FA6; text-transform:uppercase; letter-spacing:.5px;">${l}</div>
+      <div style="font-size:12.5px; font-weight:500; color:#16223A; margin-top:2px; white-space:pre-wrap;">${val ? esc(val)+suf : "—"}</div>
+    </td>`;
+  const fila = (a,b)=>`<tr>${a}${b||'<td style="width:50%; border-bottom:1px solid #D7DEE6;"></td>'}</tr>`;
+  const sec = t=>`<div style="margin:16px 0 4px; font-size:10.5px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#1B3358; border-bottom:2px solid #E4BE7A; padding-bottom:4px;">${t}</div>`;
+    return `
+  <div style="width:794px; min-height:1110px; display:flex; flex-direction:column; background:#fff; font-family:'Poppins','Helvetica Neue',Arial,sans-serif; color:#16223A; box-sizing:border-box;">
+    <div style="background:#1B3358; color:#EDF1F6; padding:26px 38px; display:flex; align-items:center; gap:16px;">
+      <svg viewBox="0 0 120 120" width="62" height="62">
+        <path d="M86.39 22.32 A46 46 0 1 1 33.61 22.32" fill="none" stroke="#E4BE7A" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="60" cy="88" r="5" fill="#EDF1F6"/>
+        <path d="M60 83.5 C60 66 60 46 60 27" fill="none" stroke="#EDF1F6" stroke-width="5.5" stroke-linecap="round"/>
+        <path d="M60 27 C50 20 40 14 33 6 C46 4 57 10 60 27 Z" fill="#EDF1F6"/>
+        <path d="M60 27 C70 18 78 12 86 5 C74 2 62 9 60 27 Z" fill="#EDF1F6" opacity="0.65"/>
+      </svg>
+      <div style="flex:1;">
+        <div style="font-weight:800; font-size:26px; line-height:1;">PG<span style="color:#E4BE7A; font-weight:500;">Agro</span></div>
+        <div style="font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#E4BE7A; margin-top:5px;">Precisión y calidad</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700; font-size:16px;">Planilla de aplicación</div>
+        <div style="font-size:11.5px; opacity:.85; margin-top:3px;">${fmtDate(i.fecha)}</div>
+      </div>
+    </div>
+
+    <div style="padding:8px 38px 24px; flex:1;">
+      <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+        ${fila(celda("Cliente", i.cliente), celda("Fecha", fmtDate(i.fecha)))}
+        ${fila(celda("Encargado", i.encargado), celda("Equipo", i.equipo))}
+        ${fila(celda("Localidad", i.localidad), celda("Campo", i.campo))}
+      </table>
+      <div style="height:18px;"></div>
+      <table style="width:100%; border-collapse:collapse;">
+        ${fila(celda("Cultivo", i.cultivo), celda("Objetivo", i.objetivo))}
+        ${fila(celda("Superficie aplicada", fmtNum(i.supAplicada), " ha"))}
+        ${fila(celda("Hora inicio", i.horaInicio), celda("Hora fin", i.horaFin))}
+      </table>
+      ${i.comentario ? `${sec("Comentario")}<div style="font-size:12.5px; padding:6px 10px; white-space:pre-wrap;">${esc(i.comentario)}</div>` : ""}
+      ${(()=>{
+        const it = [["Firma",i.cFirma],["Establecimiento",i.establec],["Etapa",i.etapa],["Orden",i.orden],["Operador",i.operadorAp]].filter(x=>x[1]);
+        const lotes = (i.lotes||[]).filter(l=>l.lote||l.has);
+        if(!it.length && !i.dosis && !lotes.length) return "";
+        let h = sec("Registro del cliente");
+        if(it.length){ h += '<table style="width:100%; border-collapse:collapse;">';
+          for(let k=0;k<it.length;k+=2) h += fila(celda(it[k][0],it[k][1]), it[k+1]?celda(it[k+1][0],it[k+1][1]):""); h += "</table>"; }
+        if(lotes.length){
+          const tot = lotes.reduce((n,l)=>n+pn(l.has),0);
+          h += '<table style="width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;"><tr style="background:#EDF1F6; color:#1B3358; font-weight:700;"><td style="padding:6px 10px;">Lote</td><td style="padding:6px 10px; text-align:right;">Has</td></tr>'
+            + lotes.map(l=>`<tr><td style="padding:5px 10px; border-bottom:1px solid #D7DEE6;">${esc(l.lote)||"—"}</td><td style="padding:5px 10px; border-bottom:1px solid #D7DEE6; text-align:right;">${esc(fmtNum(l.has))||"—"}</td></tr>`).join("")
+            + (lotes.length>1 && tot>0 ? `<tr style="font-weight:700;"><td style="padding:6px 10px;">Total</td><td style="padding:6px 10px; text-align:right;">${fmtNum(Math.round(tot*100)/100)}</td></tr>` : "")
+            + "</table>";
+        }
+        if(i.dosis) h += `<div style="margin:10px 10px 0; font-size:12px;"><div style="font-size:9px; font-weight:600; color:#5C7FA6; text-transform:uppercase; letter-spacing:.5px;">Dosis de productos</div><div style="white-space:pre-wrap; margin-top:2px;">${esc(i.dosis)}</div></div>`;
+        return h;
+      })()}
+      ${(i.fotos && i.fotos.length) ? `${sec("Fotos")}<div style="display:flex; flex-wrap:wrap; gap:10px; padding:8px 10px;">${i.fotos.map(f=>`<div class="fotobox" style="box-sizing:border-box; width:calc(50% - 5px); height:215px; background:#F6F8FA; border:1px solid #D7DEE6; border-radius:6px; display:flex; align-items:center; justify-content:center; page-break-inside:avoid;"><img src="${f}" style="max-width:100%; max-height:100%;"></div>`).join("")}</div>` : ""}
+    </div>
+
+    <div style="background:#EDF1F6; padding:12px 38px; font-size:9.5px; color:#5C7FA6; display:flex; justify-content:space-between;">
+      <span>PGAgro SAS · RUT 221067510014 · Paysandú, Uruguay</span>
+      <span>+598 99 496 906</span>
+    </div>
+  </div>`;
+}
+
+async function pdfInforme(id){
+  const i = STORE.informes.find(x=>x.id===id);
+  if(!i) return;
+  if(!window.html2pdf){ showToast("No se pudo cargar el generador de PDF — necesita conexión la primera vez"); return; }
+  showToast("Generando PDF…");
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:absolute; left:0; top:0; width:794px; background:#fff; z-index:-1; pointer-events:none;";
+  window.scrollTo(0,0);
+  wrap.innerHTML = htmlInforme(i);
+  document.body.appendChild(wrap);
+  const limpio = s => (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9]+/g,"_").replace(/^_|_$/g,"");
+  const nombre = `Informe_${limpio(i.cliente||i.campo)||"aplicacion"}_${i.fecha||todayStr()}.pdf`;
+  try{
+    const blob = await window.html2pdf().set({
+      margin:0, filename:nombre, image:{type:"jpeg", quality:0.95},
+      html2canvas:{scale:2, useCORS:true, backgroundColor:"#ffffff", windowWidth:794, scrollX:0, scrollY:0, x:0, y:0},
+      jsPDF:{unit:"mm", format:"a4", orientation:"portrait"},
+      pagebreak:{mode:["css","legacy"], avoid:[".fotobox"]}
+    }).from(wrap.firstElementChild).outputPdf("blob");
+    const file = new File([blob], nombre, {type:"application/pdf"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:"Planilla de aplicación — PGAgro"}); showToast("Listo — cuando lo envíes, marcalo como enviado"); }
+      catch(e){ if(e && e.name!=="AbortError") descargarBlob(blob, nombre); }
+    }else{
+      descargarBlob(blob, nombre);
+      showToast("PDF descargado");
+    }
+  }catch(err){
+    console.error(err); showToast("No se pudo generar el PDF");
+  }finally{
+    wrap.remove();
+  }
+}
+function descargarBlob(blob, nombre){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+
+const EQUIPOS_REPORTE = ["XAG P150","DJI Mavic 3M","Generador grande","Camión KIA 4x4","Zorra","Batería","Otro"];
+
+function openReporte(){
+  const modal = document.getElementById("formModal");
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Reportar problema</h1>
+    <label class="field-label" style="margin-top:0;">Equipo</label>
+    <select id="r_equipo">${EQUIPOS_REPORTE.map(e=>`<option>${e}</option>`).join("")}</select>
+    <label class="field-label">Qué pasó</label>
+    <textarea id="r_detalle" placeholder="Describí el problema" style="min-height:70px;"></textarea>
+    <label class="field-label">Estado</label>
+    <select id="r_estado">
+      <option>Puede continuar</option>
+      <option>Puede continuar con observación</option>
+      <option>Equipo detenido</option>
+    </select>
+    ${fotosBloque()}
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="guardarReporte()">Guardar reporte</button>
+  `;
+  fotosForm = []; renderFotosGrid();
+  document.getElementById("formOverlay").classList.add("show");
+}
+
+function guardarReporte(){
+  const detalle = document.getElementById("r_detalle").value.trim();
+  if(!detalle){ showToast("Contá qué pasó antes de guardar"); return; }
+  const reporte = {
+    fecha: todayStr(),
+    operador: currentOperadorNombre(),
+    equipo: document.getElementById("r_equipo").value,
+    detalle,
+    estado: document.getElementById("r_estado").value,
+    resuelto: false,
+    fotos: fotosForm,
+    createdAt: serverTimestamp()
+  };
+  closeForm();
+  confirmarEscritura(setDoc(nuevoId("reportes"), reporte))
+    .then(()=>{ showToast("Reporte guardado"); refrescarVistaActual(); })
+    .catch(err=>{ console.error(err); showToast("No se pudo guardar — revisá la conexión"); });
+}
+
+/* cerrar modales tocando el fondo */
+
+function openDetail(id){
+  const it = STORE.checklists.find(c=>c.id===id);
+  if(!it) return;
+  const modal = document.getElementById("detailModal");
+  modal.innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="document.getElementById('detailOverlay').classList.remove('show')">‹ Cerrar</button>
+    <h1 class="page-title">${EQUIPOS[it.tipo].label} — ${esc(it.equipo)}</h1>
+    <div class="card">
+      <div class="card-meta">Fecha: ${fmtDate(it.fecha)} ${it.realizador ? " · Realizado por: "+it.realizador : ""}</div>
+      ${it.unidad ? `<div class="card-meta">${it.unidad === "km" ? "Kilómetros" : "Horas"} actuales: ${it.actuales} · Último service: ${it.ultimoService}</div>` : ""}
+      <div class="card-meta">Próximo chequeo: ${fmtDate(it.proximoChequeo)}</div>
+    </div>
+    <div class="section-divider">Puntos revisados</div>
+    ${it.puntos.map(p=>`
+      <div class="point">
+        <div class="point-name">${p.nombre}
+          <span class="pill ${p.estado==='OK'?'ok':p.estado==='X'?'bad':'nc'}" style="margin-left:6px;">${p.estado}</span>
+        </div>
+        ${p.observaciones ? `<div class="hint">${p.observaciones}</div>` : ""}
+        ${p.plazo && p.plazo!=="Sin corrección" ? `<div class="hint">Plazo de corrección: ${p.plazo}</div>` : ""}
+      </div>
+    `).join("")}
+  `;
+  document.getElementById("detailOverlay").classList.add("show");
+}
+
+/* cerrar modales tocando el fondo */
+document.getElementById("formOverlay").addEventListener("click", e=>{ if(e.target.id==="formOverlay") closeForm(); });
+document.getElementById("detailOverlay").addEventListener("click", e=>{ if(e.target.id==="detailOverlay") e.currentTarget.classList.remove("show"); });
+
+/* ---------- Operadores habilitados (solo administradores) ---------- */
+let OPERADORES = [], unsubOps = null;
+function openOperadores(){
+  if(!ES_ADMIN) return;
+  if(!unsubOps){
+    unsubOps = onSnapshot(collection(db,"operadores"), snap=>{
+      OPERADORES = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a.nombre||a.id).localeCompare(b.nombre||b.id));
+      if(document.getElementById("listaOps")) pintarOperadores();
+    }, err=>console.error("operadores:", err));
+  }
+  document.getElementById("formModal").innerHTML = `
+    <div class="modal-handle"></div>
+    <button class="back-link" onclick="closeForm()">‹ Volver</button>
+    <h1 class="page-title">Operadores habilitados</h1>
+    <div class="hint" style="margin-bottom:10px;">Solo ustedes (administradores) y las personas de esta lista pueden entrar. Cada una debe crear su cuenta con ese mismo email y verificarlo.</div>
+    <label class="field-label" style="margin-top:0;">Nombre</label>
+    <input type="text" id="op_nombre" placeholder="Ej: Juancho">
+    <label class="field-label">Email</label>
+    <input type="text" id="op_email" placeholder="operador@gmail.com" autocapitalize="off">
+    <button class="btn btn-primary btn-block" onclick="guardarOperador()">Habilitar</button>
+    <div class="section-divider">Habilitados</div>
+    <div id="listaOps"></div>`;
+  document.getElementById("formOverlay").classList.add("show");
+  pintarOperadores();
+}
+function pintarOperadores(){
+  const el = document.getElementById("listaOps");
+  el.innerHTML = OPERADORES.length ? OPERADORES.map(o=>`
+    <div class="orden-mini" style="display:flex; align-items:center; gap:8px;">
+      <div style="flex:1; min-width:0;"><b>${esc(o.nombre||"—")}</b><div class="om-meta" style="overflow-wrap:anywhere;">${esc(o.id)}</div></div>
+      <button class="btn btn-danger btn-small" onclick="quitarOperador('${esc(o.id)}')">Quitar</button>
+    </div>`).join("") : `<div class="empty">Todavía no habilitaste a nadie.</div>`;
+}
+async function guardarOperador(){
+  const email = document.getElementById("op_email").value.trim().toLowerCase();
+  const nombre = document.getElementById("op_nombre").value.trim();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showToast("Revisá el email"); return; }
+  try{
+    await confirmarEscritura(setDoc(doc(db,"operadores",email), { email, nombre, creadoPor:currentOperadorNombre(), createdAt:serverTimestamp() }));
+    document.getElementById("op_email").value = ""; document.getElementById("op_nombre").value = "";
+    showToast("Operador habilitado");
+  }catch(err){ console.error(err); showToast("No se pudo guardar — revisá la conexión"); }
+}
+async function quitarOperador(id){
+  if(!confirm("¿Quitar el acceso a "+id+"?")) return;
+  try{ await confirmarEscritura(deleteDoc(doc(db,"operadores",id))); showToast("Acceso quitado"); }
+  catch(err){ console.error(err); showToast("No se pudo quitar"); }
+}
+
+
+/* =========================================================
+   GESTIÓN · solo administradores
+   Clientes → campos → trabajos → facturas (que agrupan trabajos).
+   Colecciones gs_* (las reglas de Firestore solo dejan leerlas al admin).
+   Los operadores NO ven nada de esto: tarifas, importes y cobros
+   viven únicamente acá. Los informes (colección "informes") no
+   llevan ningún dato económico.
+   ========================================================= */
+const GCOL = { clientes:"gs_clientes", campos:"gs_campos", trabajos:"gs_trabajos", facturas:"gs_facturas", insumos:"gs_insumos", ventas:"gs_ventas" };
+const G = { clientes:[], campos:[], trabajos:[], facturas:[], insumos:[], ventas:[], vista:"resumen", filtroT:"todos", filtroF:"pend", filtroV:"todas", cliId:null };
+let gEscuchando = false;
+
+function gIniciar(){
+  if(!ES_ADMIN || gEscuchando) return;
+  gEscuchando = true;
+  Object.keys(GCOL).forEach(k=>{
+    onSnapshot(collection(db,GCOL[k]), snap=>{
+      G[k] = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      refrescarVistaActual();
+    }, err=>console.error(GCOL[k], err));
+  });
+}
+
+/* ---------- helpers ---------- */
+const gv = (o,k) => esc(o && o[k]!=null ? o[k] : "");
+const gg = id => { const e = document.getElementById(id); return e ? String(e.value||"").trim() : ""; };
+function gOpts(list, sel){
+  return list.map(o=>{ const [v,l] = Array.isArray(o) ? o : [o,o];
+    return `<option value="${esc(v)}" ${String(v)===String(sel)?"selected":""}>${esc(l)}</option>`; }).join("");
+}
+function gForm(html){
+  const m = document.getElementById("formModal");
+  m.innerHTML = `<div class="modal-handle"></div><button class="back-link" onclick="closeForm()">‹ Volver</button>` + html;
+  document.getElementById("formOverlay").classList.add("show");
+  m.scrollTop = 0;
+}
+async function gEscribir(p, ok){
+  try{ await confirmarEscritura(p); if(ok) showToast(ok); return true; }
+  catch(e){ console.error(e); showToast("No se pudo guardar — revisá la conexión"); return false; }
+}
+const money = (n, mon) => (mon==="UYU" ? "$U " : "US$ ") + Number(n||0).toLocaleString("es-UY",{maximumFractionDigits:2});
+function sumMon(items, fn){
+  const s = { USD:0, UYU:0 };
+  items.forEach(x=>{ const [m,v] = fn(x); s[m==="UYU"?"UYU":"USD"] += v; });
+  return s;
+}
+const monTxt = s => [s.USD?money(s.USD,"USD"):"", s.UYU?money(s.UYU,"UYU"):""].filter(Boolean).join(" · ") || "—";
+
+const gCli = id => G.clientes.find(c=>c.id===id);
+const gCampo = id => G.campos.find(c=>c.id===id);
+const gNomCli = id => (gCli(id)||{}).nombre || "(cliente eliminado)";
+const gNomCampo = t => (gCampo(t.campoId)||{}).nombre || t.campoTxt || "";
+const gSorted = (arr, f) => [...arr].sort((a,b)=>(b[f]||"").localeCompare(a[f]||""));
+
+function importeTrabajo(t){
+  const m = pn(t.importe);
+  return m>0 ? m : pn(t.ha)*pn(t.tarifa);
+}
+const facturaDe = t => G.facturas.find(f=>(f.trabajoIds||[]).includes(t.id));
+const factTrabajos = f => (f.trabajoIds||[]).map(id=>G.trabajos.find(t=>t.id===id)).filter(Boolean);
+const importeVenta = v => pn(v.cantidad)*pn(v.precio);
+const gananciaVenta = v => pn(v.cantidad)*pn(v.ganancia);
+const facturaDeV = v => G.facturas.find(f=>(f.ventaIds||[]).includes(v.id));
+const factVentas = f => (f.ventaIds||[]).map(id=>G.ventas.find(v=>v.id===id)).filter(Boolean);
+function factTotal(f){
+  return pn(f.totalManual)>0 ? pn(f.totalManual) : factTrabajos(f).reduce((n,t)=>n+importeTrabajo(t),0) + factVentas(f).reduce((n,v)=>n+importeVenta(v),0);
+}
+function estadoCobroV(v){
+  const f = facturaDeV(v);
+  if(!f) return { k:"sin", l:"Por facturar", cls:"warn" };
+  if(f.estado==="cobrada") return { k:"cob", l:"Cobrado", cls:"ok" };
+  const venc = f.vence && f.vence < todayStr();
+  return { k:"pend", l: venc ? "Pago vencido" : "Facturado · pago pendiente", cls: venc ? "bad" : "nc" };
+}
+const informeDe = t => t.informeId ? STORE.informes.find(i=>i.id===t.informeId) : null;
+
+/* estado del informe de un trabajo (solo si ya está realizado) */
+function estadoInforme(t){
+  if(t.estado!=="Realizado") return null;
+  const i = informeDe(t);
+  if(!i)          return { k:"sin",  l:"Sin informe",           cls:"warn" };
+  if(i.enviado)   return { k:"env",  l:"Informe enviado",       cls:"ok" };
+  if(i.borrador)  return { k:"borr", l:"Informe por completar", cls:"warn" };
+  return              { k:"pend", l:"Informe por enviar",    cls:"warn" };
+}
+/* estado de cobro, independiente del informe */
+function estadoCobro(t){
+  if(t.estado!=="Realizado") return null;
+  const f = facturaDe(t);
+  if(!f) return { k:"sin", l:"Por facturar", cls:"warn" };
+  if(f.estado==="cobrada") return { k:"cob", l:"Cobrado", cls:"ok" };
+  const venc = f.vence && f.vence < todayStr();
+  return { k:"pend", l: venc ? "Pago vencido" : "Facturado · pago pendiente", cls: venc ? "bad" : "nc" };
+}
+
+/* ---------- navegación interna ---------- */
+function gVista(v){ G.vista = v; renderGestion(); window.scrollTo({top:0}); }
+function gIr(v, filtro){
+  G.vista = v;
+  if(v==="trabajos" && filtro) G.filtroT = filtro;
+  if(v==="facturas" && filtro) G.filtroF = filtro;
+  showView("gestion");
+}
+function gSetFiltroT(f){ G.filtroT = f; renderGestion(); }
+function gSetFiltroF(f){ G.filtroF = f; renderGestion(); }
+function gAbrirCliente(id){ G.cliId = id; G.vista = "cliente"; renderGestion(); window.scrollTo({top:0}); }
+
+function renderGestion(){
+  if(!ES_ADMIN) return;
+  document.querySelectorAll("#gSub button").forEach(b=>b.classList.toggle("on",
+    b.dataset.v===G.vista || (G.vista==="cliente" && b.dataset.v==="clientes")));
+  const el = document.getElementById("gBody");
+  if(G.vista==="clientes") el.innerHTML = gClientesHTML();
+  else if(G.vista==="cliente") el.innerHTML = gDetalleHTML();
+  else if(G.vista==="trabajos") el.innerHTML = gTrabajosHTML();
+  else if(G.vista==="insumos") el.innerHTML = gInsumosHTML();
+  else if(G.vista==="facturas") el.innerHTML = gFacturasHTML();
+  else el.innerHTML = gResumenHTML();
+}
+
+/* ---------- RESUMEN ---------- */
+function gContadores(){
+  const hoy = todayStr(), mes = hoy.slice(0,7);
+  const realizados = G.trabajos.filter(t=>t.estado==="Realizado");
+  const porFacturar = realizados.filter(t=>!facturaDe(t));
+  const pend = G.facturas.filter(f=>f.estado!=="cobrada");
+  const venc = pend.filter(f=>f.vence && f.vence<hoy);
+  const cobMes = G.facturas.filter(f=>f.estado==="cobrada" && (f.cobradaFecha||"").startsWith(mes));
+  const infPend = realizados.filter(t=>{ const e=estadoInforme(t); return e && e.k!=="env"; });
+  const porHacer = G.trabajos.filter(t=>t.estado!=="Realizado");
+  const sinHa = realizados.filter(t=>!(pn(t.ha)>0));
+  const ventasPorFacturar = G.ventas.filter(v=>!facturaDeV(v));
+  return { ventasPorFacturar, porFacturar, pend, venc, cobMes, infPend, porHacer, sinHa };
+}
+function gStatsHTML(){
+  const c = gContadores();
+  const st = (cls,n,l,s,v,f)=>`<button class="stat ${cls}" onclick="gIr('${v}','${f}')"><div class="n">${n}</div><div class="l">${l}</div><div class="s">${s}</div></button>`;
+  return `<div class="stats">
+    ${st((c.porFacturar.length+c.ventasPorFacturar.length)?"warn":"ok", c.porFacturar.length+c.ventasPorFacturar.length, "Por facturar", esc(monTxt(sumMon([...c.porFacturar.map(t=>[t.moneda,importeTrabajo(t)]),...c.ventasPorFacturar.map(v=>[v.moneda,importeVenta(v)])],x=>x))), "trabajos","sinfact")}
+    ${st(c.venc.length?"bad":(c.pend.length?"warn":"ok"), c.pend.length, "Pago pendiente", esc(monTxt(sumMon(c.pend,f=>[f.moneda,factTotal(f)])))+(c.venc.length?" · "+c.venc.length+" vencida"+(c.venc.length>1?"s":""):""), "facturas","pend")}
+    ${st(c.infPend.length?"warn":"ok", c.infPend.length, "Informes por enviar", "al productor", "trabajos","inf")}
+    ${st("", c.porHacer.length, "Trabajos por hacer", "surgieron, sin realizar", "trabajos","pend")}
+  </div>`;
+}
+function gResumenHTML(){
+  const c = gContadores();
+  return `
+    ${gStatsHTML()}
+    <div class="stat-title">Cobrado este mes</div>
+    <div class="stats"><button class="stat full ok" onclick="gIr('facturas','cob')"><div class="n" style="font-size:22px;">${esc(monTxt(sumMon(c.cobMes,f=>[f.moneda,factTotal(f)])))}</div><div class="l">${c.cobMes.length} factura${c.cobMes.length===1?"":"s"} cobrada${c.cobMes.length===1?"":"s"}</div></button></div>
+    ${c.sinHa.length ? `<div class="alert-card" style="margin-top:12px;"><b>${c.sinHa.length} trabajo${c.sinHa.length>1?"s":""} realizado${c.sinHa.length>1?"s":""} sin hectáreas</b><span>Cargalas para poder facturar y para completar el informe.</span></div>` : ""}
+    ${!G.clientes.some(c=>c.nombre==="Dos Ceibos") ? `<div class="alert-card" style="margin-top:12px;"><b>Cargar datos de la planilla</b><span>Trae Dos Ceibos (7 trabajos realizados y su factura pendiente).</span><button class="btn btn-outline btn-small" style="margin-top:8px;" onclick="gImportarInicial()">⬇️ Cargar ahora</button></div>` : ""}
+    ${(c.ventasPorFacturar.length)?`<div class="hint" style="margin-top:10px;">Incluye ${c.ventasPorFacturar.length} venta${c.ventasPorFacturar.length>1?"s":""} de insumos sin facturar.</div>`:""}
+    ${!G.insumos.length && !G.ventas.length ? `<div class="alert-card" style="margin-top:12px;"><b>Cargar ventas de insumos</b><span>Trae los productos, el stock y las 4 ventas de la planilla (Harrier y Bioestimulante Acadian).</span><button class="btn btn-outline btn-small" style="margin-top:8px;" onclick="gImportarInsumos()">⬇️ Cargar ahora</button></div>` : ""}
+    <div class="home-actions">
+      <button class="btn btn-primary" onclick="gFormTrabajo()">＋ Nuevo trabajo</button>
+      <button class="btn btn-outline" onclick="gFormVenta()">🌱 Nueva venta de insumos</button>
+      <button class="btn btn-outline" onclick="gFormFactura()">💲 Nueva factura</button>
+      <button class="btn btn-outline" onclick="gFormCliente()">👤 Nuevo cliente</button>
+    </div>`;
+}
+
+/* ---------- CLIENTES ---------- */
+function gClientesHTML(){
+  return `
+    <button class="btn btn-primary" style="margin-bottom:10px;" onclick="gFormCliente()">＋ Nuevo cliente</button>
+    <input type="text" id="gBusca" placeholder="Buscar cliente, RUT o localidad…" oninput="gBuscar()" autocomplete="off" style="margin-bottom:12px;">
+    <div id="gCliLista">${gListaClientesHTML("")}</div>`;
+}
+function gBuscar(){ document.getElementById("gCliLista").innerHTML = gListaClientesHTML(gg("gBusca")); }
+function gSaldoCliente(id){
+  return sumMon(G.facturas.filter(f=>f.clienteId===id && f.estado!=="cobrada"), f=>[f.moneda, factTotal(f)]);
+}
+function gListaClientesHTML(q){
+  q = q.toLowerCase();
+  let items = [...G.clientes].sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+  if(q) items = items.filter(c=>[c.nombre,c.razon,c.rut,c.localidad,c.contacto].join(" ").toLowerCase().includes(q));
+  if(!items.length) return `<div class="empty"><b>${G.clientes.length?"No encontré ese cliente.":"Todavía no cargaste clientes."}</b>Los podés crear acá o al vuelo desde un trabajo nuevo.</div>`;
+  return items.map(c=>{
+    const campos = G.campos.filter(x=>x.clienteId===c.id).length;
+    const trab = G.trabajos.filter(t=>t.clienteId===c.id).length;
+    const saldo = gSaldoCliente(c.id);
+    return `<div class="inf-item" style="cursor:pointer;" onclick="gAbrirCliente('${c.id}')">
+      <div class="hi-top"><div><b>${esc(c.nombre)}</b><div class="card-sub">${esc([c.razon&&c.razon!==c.nombre?c.razon:"", c.localidad].filter(Boolean).join(" · "))}</div></div><span class="chev" style="color:var(--sage); font-size:18px;">›</span></div>
+      <div class="hi-summary">
+        <span class="pill nc">${campos} campo${campos===1?"":"s"}</span>
+        <span class="pill nc">${trab} trabajo${trab===1?"":"s"}</span>
+        ${(saldo.USD||saldo.UYU) ? `<span class="pill warn">Debe ${esc(monTxt(saldo))}</span>` : ""}
+      </div></div>`;
+  }).join("");
+}
+
+let gEditCli = null;
+function gFormCliente(id){
+  gEditCli = id || null; const c = id ? gCli(id) : null;
+  gForm(`
+    <h1 class="page-title">${c?"Editar cliente":"Nuevo cliente"}</h1>
+    <label class="field-label" style="margin-top:0;">Nombre (como lo nombrás)</label><input type="text" id="gc_nombre" value="${gv(c,"nombre")}">
+    <label class="field-label">Razón social</label><input type="text" id="gc_razon" value="${gv(c,"razon")}">
+    <div class="row2">
+      <div><label class="field-label">RUT</label><input type="text" id="gc_rut" inputmode="numeric" value="${gv(c,"rut")}"></div>
+      <div><label class="field-label">Localidad</label><input type="text" id="gc_loc" value="${gv(c,"localidad")}"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Persona de contacto</label><input type="text" id="gc_contacto" value="${gv(c,"contacto")}"></div>
+      <div><label class="field-label">Teléfono</label><input type="text" id="gc_tel" inputmode="tel" value="${gv(c,"telefono")}"></div>
+    </div>
+    <label class="field-label">Email</label><input type="text" id="gc_email" autocapitalize="off" value="${gv(c,"email")}">
+    <label class="field-label">Notas</label><textarea id="gc_notas" style="min-height:64px;">${gv(c,"notas")}</textarea>
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="gGuardarCliente()">${c?"Guardar cambios":"Guardar cliente"}</button>`);
+}
+async function gGuardarCliente(){
+  const nombre = gg("gc_nombre"); if(!nombre){ showToast("Poné el nombre del cliente"); return; }
+  const d = { nombre, razon:gg("gc_razon"), rut:gg("gc_rut"), localidad:gg("gc_loc"), contacto:gg("gc_contacto"),
+    telefono:gg("gc_tel"), email:gg("gc_email"), notas:gg("gc_notas"), updatedAt:serverTimestamp() };
+  const id = gEditCli; closeForm();
+  if(id) await gEscribir(updateDoc(doc(db,GCOL.clientes,id),d), "Cliente actualizado");
+  else await gEscribir(setDoc(nuevoId(GCOL.clientes),{ ...d, activo:true, createdAt:serverTimestamp() }), "Cliente guardado");
+}
+async function gEliminarCliente(id){
+  const usos = G.trabajos.filter(t=>t.clienteId===id).length + G.facturas.filter(f=>f.clienteId===id).length + G.ventas.filter(v=>v.clienteId===id).length;
+  if(usos){ showToast("Tiene trabajos o facturas: no se puede eliminar"); return; }
+  if(!confirm("¿Eliminar este cliente y sus campos?")) return;
+  for(const c of G.campos.filter(x=>x.clienteId===id)) await gEscribir(deleteDoc(doc(db,GCOL.campos,c.id)));
+  await gEscribir(deleteDoc(doc(db,GCOL.clientes,id)), "Cliente eliminado");
+  gVista("clientes");
+}
+
+/* detalle del cliente */
+function gDetalleHTML(){
+  const c = gCli(G.cliId);
+  if(!c) return `<button class="back-link" onclick="gVista('clientes')">‹ Clientes</button><div class="empty"><b>Cliente no encontrado.</b></div>`;
+  const campos = G.campos.filter(x=>x.clienteId===c.id).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+  const trabs = gSorted(G.trabajos.filter(t=>t.clienteId===c.id), "fecha");
+  const facts = gSorted(G.facturas.filter(f=>f.clienteId===c.id), "fecha");
+  const ventasC = gSorted(G.ventas.filter(v=>v.clienteId===c.id), "fecha");
+  const dato = (l,v)=> v ? `<div style="display:flex; gap:8px; font-size:13px; margin-top:4px;"><span style="color:#7A8699; min-width:84px;">${l}</span><span>${esc(v)}</span></div>` : "";
+  return `
+    <button class="back-link" onclick="gVista('clientes')">‹ Clientes</button>
+    <div class="inf-item">
+      <div class="hi-top"><b style="font-size:17px;">${esc(c.nombre)}</b></div>
+      ${dato("Razón social",c.razon)}${dato("RUT",c.rut)}${dato("Localidad",c.localidad)}${dato("Contacto",c.contacto)}${dato("Teléfono",c.telefono)}${dato("Email",c.email)}${dato("Notas",c.notas)}
+      <div class="inf-actions">
+        <button class="btn btn-ghost btn-small" onclick="gFormCliente('${c.id}')">✏️ Editar</button>
+        <button class="btn btn-danger btn-small" onclick="gEliminarCliente('${c.id}')">🗑 Eliminar</button>
+      </div>
+    </div>
+    <div class="section-divider">Campos</div>
+    ${campos.length ? campos.map(x=>`<div class="inf-item"><div class="hi-top"><div><b>${esc(x.nombre)}</b><div class="card-sub">${esc([x.localidad, x.ha?fmtNum(x.ha)+" ha":""].filter(Boolean).join(" · "))}</div></div>
+        <div style="display:flex; gap:6px;"><button class="btn btn-ghost btn-small" style="width:auto;" onclick="gFormCampo('${x.id}')">✏️</button><button class="btn btn-danger btn-small" style="width:auto;" onclick="gEliminarCampo('${x.id}')">🗑</button></div></div></div>`).join("")
+      : `<div class="hint" style="margin-bottom:8px;">Todavía no tiene campos.</div>`}
+    <button class="btn btn-outline" style="margin-top:4px;" onclick="gFormCampo(null,'${c.id}')">＋ Agregar campo</button>
+    <div class="section-divider">Trabajos</div>
+    ${trabs.length ? trabs.map(t=>gTrabajoCard(t,false)).join("") : `<div class="hint" style="margin-bottom:8px;">Sin trabajos todavía.</div>`}
+    <button class="btn btn-outline" style="margin-top:4px;" onclick="gFormTrabajo(null,'${c.id}')">＋ Nuevo trabajo</button>
+    <div class="section-divider">Insumos</div>
+    ${ventasC.length ? ventasC.map(v=>gVentaCard(v,false)).join("") : `<div class="hint" style="margin-bottom:8px;">Sin ventas de insumos.</div>`}
+    <button class="btn btn-outline" style="margin-top:4px;" onclick="gFormVenta(null,'${c.id}')">＋ Nueva venta de insumos</button>
+    <div class="section-divider">Facturas</div>
+    ${facts.length ? facts.map(f=>gFacturaCard(f,false)).join("") : `<div class="hint" style="margin-bottom:8px;">Sin facturas todavía.</div>`}
+    <button class="btn btn-outline" style="margin-top:4px;" onclick="gFormFactura(null,'${c.id}')">＋ Nueva factura</button>`;
+}
+
+/* campos */
+let gEditCampo = null, gCampoCli = null;
+function gFormCampo(id, clienteId){
+  gEditCampo = id || null; const x = id ? gCampo(id) : null;
+  gCampoCli = x ? x.clienteId : clienteId;
+  gForm(`
+    <h1 class="page-title">${x?"Editar campo":"Nuevo campo"} · ${esc(gNomCli(gCampoCli))}</h1>
+    <label class="field-label" style="margin-top:0;">Nombre del campo</label><input type="text" id="gk_nombre" value="${gv(x,"nombre")}">
+    <div class="row2">
+      <div><label class="field-label">Localidad / ubicación</label><input type="text" id="gk_loc" value="${gv(x,"localidad")}"></div>
+      <div><label class="field-label">Hectáreas (aprox.)</label><input type="text" inputmode="decimal" id="gk_ha" value="${gv(x,"ha")}"></div>
+    </div>
+    <label class="field-label">Notas</label><textarea id="gk_notas" style="min-height:56px;">${gv(x,"notas")}</textarea>
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="gGuardarCampo()">Guardar</button>`);
+}
+async function gGuardarCampo(){
+  const nombre = gg("gk_nombre"); if(!nombre){ showToast("Poné el nombre del campo"); return; }
+  const d = { clienteId:gCampoCli, nombre, localidad:gg("gk_loc"), ha:normNum(gg("gk_ha")), notas:gg("gk_notas"), updatedAt:serverTimestamp() };
+  const id = gEditCampo; closeForm();
+  if(id) await gEscribir(updateDoc(doc(db,GCOL.campos,id),d), "Campo actualizado");
+  else await gEscribir(setDoc(nuevoId(GCOL.campos),{ ...d, createdAt:serverTimestamp() }), "Campo guardado");
+}
+async function gEliminarCampo(id){
+  if(G.trabajos.some(t=>t.campoId===id)){ showToast("Hay trabajos en este campo: no se puede eliminar"); return; }
+  if(!confirm("¿Eliminar este campo?")) return;
+  await gEscribir(deleteDoc(doc(db,GCOL.campos,id)), "Campo eliminado");
+}
+
+/* ---------- TRABAJOS ---------- */
+const FILTROS_T = [["todos","Todos"],["pend","Por hacer"],["inf","Informe por enviar"],["sinfact","Por facturar"],["pago","Pago pendiente"],["cob","Cobrados"]];
+function gPasaFiltroT(t){
+  const f = G.filtroT, ei = estadoInforme(t), ec = estadoCobro(t);
+  if(f==="pend") return t.estado!=="Realizado";
+  if(f==="inf") return !!ei && ei.k!=="env";
+  if(f==="sinfact") return !!ec && ec.k==="sin";
+  if(f==="pago") return !!ec && ec.k==="pend";
+  if(f==="cob") return !!ec && ec.k==="cob";
+  return true;
+}
+function gTrabajosHTML(){
+  const items = gSorted(G.trabajos.filter(gPasaFiltroT), "fecha");
+  return `
+    <button class="btn btn-primary" style="margin-bottom:10px;" onclick="gFormTrabajo()">＋ Nuevo trabajo</button>
+    <div class="g-chips">${FILTROS_T.map(([k,l])=>`<button class="${G.filtroT===k?"on":""}" onclick="gSetFiltroT('${k}')">${l}</button>`).join("")}</div>
+    ${items.length ? items.map(t=>gTrabajoCard(t,true)).join("")
+      : `<div class="empty"><b>No hay trabajos en esta vista.</b>${G.trabajos.length?"Probá con otro filtro.":"Cargá el primero con “＋ Nuevo trabajo”."}</div>`}`;
+}
+function gTrabajoCard(t, conCliente){
+  const ei = estadoInforme(t), ec = estadoCobro(t), imp = importeTrabajo(t), real = t.estado==="Realizado";
+  const meta = [t.etapa, t.dosis].filter(Boolean).join(" · ");
+  return `<div class="inf-item">
+    <div class="hi-top">
+      <div><b>${esc(gNomCampo(t) || "Sin campo")}</b>
+      <div class="card-sub">${esc([conCliente?gNomCli(t.clienteId):"", t.lote?"Lote "+t.lote:"", t.servicio].filter(Boolean).join(" · "))}</div></div>
+      <span class="hi-date">${t.fecha?fmtDate(t.fecha):"sin fecha"}</span>
+    </div>
+    <div class="hi-summary">
+      <span class="pill ${real?"ok":"nc"}">${real?"✓ Realizado":"Por hacer"}</span>
+      ${ei?`<span class="pill ${ei.cls}">${ei.l}</span>`:""}
+      ${ec?`<span class="pill ${ec.cls}">${ec.l}</span>`:""}
+      ${pn(t.ha)>0?`<span class="pill nc">${esc(fmtNum(t.ha))} ha</span>`:(real?`<span class="pill warn">Faltan hectáreas</span>`:"")}
+      ${imp>0?`<span class="pill nc">${esc(money(imp,t.moneda))}</span>`:""}
+    </div>
+    ${meta?`<div class="card-meta">${esc(meta)}</div>`:""}
+    <div class="inf-actions">
+      ${!real?`<button class="btn btn-primary btn-small" onclick="gMarcarRealizado('${t.id}')">✓ Realizado</button>`:""}
+      ${real && informeDe(t)?`<button class="btn btn-ghost btn-small" onclick="gAbrirInforme('${t.id}')">📄 Informe</button>`:""}
+      ${real && ec && ec.k==="sin"?`<button class="btn btn-ghost btn-small" onclick="gFormFactura(null,'${t.clienteId}','${t.id}')">💲 Facturar</button>`:""}
+      <button class="btn btn-ghost btn-small" onclick="gFormTrabajo('${t.id}')">✏️ Editar</button>
+      <button class="btn btn-danger btn-small" onclick="gEliminarTrabajo('${t.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+function gAbrirInforme(tid){
+  const t = G.trabajos.find(x=>x.id===tid); if(!t || !t.informeId) return;
+  showView("informes"); openInforme(t.informeId);
+}
+
+const SERVICIOS_G = ["Aplicación con drones","Asesoramiento agronómico","Otro"];
+let gEditT = null;
+function gSelCli(sel, conNuevo=true){
+  const items = [...G.clientes].sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+  return gOpts([["", "— Elegí un cliente —"], ...items.map(c=>[c.id,c.nombre]), ...(conNuevo?[["__nuevo","➕ Cliente nuevo…"]]:[])], sel);
+}
+function gFormTrabajo(id, clienteId){
+  gEditT = id || null; const t = id ? G.trabajos.find(x=>x.id===id) : null;
+  const cid = t ? t.clienteId : (clienteId||"");
+  gForm(`
+    <h1 class="page-title">${t?"Editar trabajo":"Nuevo trabajo"}</h1>
+    <label class="field-label" style="margin-top:0;">Cliente</label>
+    <select id="gt_cli" onchange="gTrabCliCambia()">${gSelCli(cid)}</select>
+    <div id="gt_cliNuevo" style="display:none; margin-top:6px;">
+      <input type="text" id="gt_cliNombre" placeholder="Nombre del cliente nuevo">
+      <input type="text" id="gt_cliRut" inputmode="numeric" placeholder="RUT (opcional, lo completás después)" style="margin-top:6px;">
+    </div>
+    <label class="field-label">Campo</label>
+    <select id="gt_campo" onchange="gTrabCampoCambia()"></select>
+    <div id="gt_campoNuevo" style="display:none; margin-top:6px;"><input type="text" id="gt_campoNombre" placeholder="Nombre del campo nuevo"></div>
+    <div class="row2">
+      <div><label class="field-label">Fecha</label><input type="date" id="gt_fecha" value="${gv(t,"fecha")}"></div>
+      <div><label class="field-label">Lote(s)</label><input type="text" id="gt_lote" value="${gv(t,"lote")}" placeholder="Ej: P5A"></div>
+    </div>
+    <label class="field-label">Servicio</label><select id="gt_serv">${gOpts(SERVICIOS_G, t?t.servicio:SERVICIOS_G[0])}</select>
+    <div class="row2">
+      <div><label class="field-label">Etapa</label><input type="text" id="gt_etapa" value="${gv(t,"etapa")}" placeholder="Ej: Barbecho"></div>
+      <div><label class="field-label">Operador</label><input type="text" id="gt_oper" value="${gv(t,"operador")}"></div>
+    </div>
+    <label class="field-label">Productos y dosis</label><textarea id="gt_dosis" style="min-height:56px;" placeholder="Ej: Glifosato 4 L/ha">${gv(t,"dosis")}</textarea>
+    <label class="field-label">Estado</label>
+    <select id="gt_estado">${gOpts([["Pendiente","Por hacer (surgió, falta realizarlo)"],["Realizado","Realizado"]], t?t.estado:"Pendiente")}</select>
+    <div class="hint">Al marcarlo “Realizado” se crea solo el informe para los operadores.</div>
+    ${t ? gInformeSelHTML(t) : ""}
+    <div class="section-divider">Hectáreas y tarifa</div>
+    <div class="row2">
+      <div><label class="field-label" style="margin-top:0;">Hectáreas</label><input type="text" id="gt_ha" inputmode="decimal" value="${gv(t,"ha")}" oninput="gTrabCalc()"></div>
+      <div><label class="field-label" style="margin-top:0;">Tarifa por ha</label><input type="text" id="gt_tarifa" inputmode="decimal" value="${gv(t,"tarifa")}" oninput="gTrabCalc()"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Moneda</label><select id="gt_mon" onchange="gTrabCalc()">${gOpts(["USD","UYU"], t?t.moneda:"USD")}</select></div>
+      <div><label class="field-label">Importe fijo (opcional)</label><input type="text" id="gt_imp" inputmode="decimal" value="${gv(t,"importe")}" oninput="gTrabCalc()" placeholder="si no es por ha"></div>
+    </div>
+    <div class="hint" id="gt_calc"></div>
+    <label class="field-label">Nota</label><textarea id="gt_nota" style="min-height:52px;">${gv(t,"nota")}</textarea>
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="gGuardarTrabajo()">Guardar</button>`);
+  gTrabCliCambia(t ? t.campoId : "");
+  gTrabCalc();
+}
+function gTrabCliCambia(campoSel){
+  const cid = gg("gt_cli");
+  document.getElementById("gt_cliNuevo").style.display = cid==="__nuevo" ? "block" : "none";
+  const campos = (cid && cid!=="__nuevo") ? G.campos.filter(x=>x.clienteId===cid).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es")) : [];
+  const sel = document.getElementById("gt_campo");
+  const antes = typeof campoSel==="string" ? campoSel : sel.value;
+  const lista = [...(campos.length ? [["","— Elegí el campo —"]] : []), ...campos.map(x=>[x.id,x.nombre]), ["__nuevo","➕ Campo nuevo…"]];
+  sel.innerHTML = gOpts(lista, (campos.some(x=>x.id===antes) || antes==="__nuevo") ? antes : (campos.length ? "" : "__nuevo"));
+  gTrabCampoCambia();
+}
+function gTrabCampoCambia(){
+  document.getElementById("gt_campoNuevo").style.display = document.getElementById("gt_campo").value==="__nuevo" ? "block" : "none";
+}
+function gTrabCalc(){
+  const t = { ha:gg("gt_ha"), tarifa:gg("gt_tarifa"), importe:gg("gt_imp") };
+  const imp = importeTrabajo(t);
+  document.getElementById("gt_calc").textContent = imp>0 ? "Importe del trabajo: "+money(imp, gg("gt_mon")) : "Importe: se calcula con hectáreas × tarifa.";
+}
+
+/* Elegir a mano qué informe corresponde a un trabajo (p. ej. cuando hay dos informes del mismo trabajo) */
+function gInformesPosibles(t){
+  const cli = (gNomCli(t.clienteId)||"").trim().toLowerCase();
+  const usados = new Set(G.trabajos.filter(x=>x.id!==t.id && x.informeId).map(x=>x.informeId));
+  return STORE.informes.filter(i=>i.id===t.informeId || (!usados.has(i.id) && (i.cliente||"").trim().toLowerCase()===cli))
+    .sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||""));
+}
+function gInformeSelHTML(t){
+  const lista = gInformesPosibles(t);
+  if(!lista.length) return "";
+  const lbl = i => `${i.fecha?i.fecha.split("-").reverse().join("/"):"s/f"} · ${i.campo||"s/campo"} · ${(i.fotos||[]).length?`📷 ${(i.fotos||[]).length} foto${(i.fotos||[]).length>1?"s":""}`:"sin fotos"}${i.enviado?" · enviado":""}${i.id===t.informeId?" (vinculado hoy)":""}`;
+  return `<label class="field-label">Informe de este trabajo</label>
+    <select id="gt_inf"><option value="">${t.informeId?"Dejar el vinculado":"Ninguno / crear uno nuevo al marcar Realizado"}</option>${lista.map(i=>`<option value="${i.id}">${esc(lbl(i))}</option>`).join("")}</select>
+    <div class="hint">Si hay dos informes del mismo trabajo, elegí el que querés conservar (el de las fotos).</div>`;
+}
+async function gGuardarTrabajo(){
+  let cliId = gg("gt_cli"); if(!cliId){ showToast("Elegí un cliente"); return; }
+  const prev = gEditT ? G.trabajos.find(x=>x.id===gEditT) : null;
+  let cliNombre;
+  if(cliId==="__nuevo"){
+    cliNombre = gg("gt_cliNombre"); if(!cliNombre){ showToast("Escribí el nombre del cliente nuevo"); return; }
+    const ref = nuevoId(GCOL.clientes);
+    await gEscribir(setDoc(ref,{ nombre:cliNombre, rut:gg("gt_cliRut"), activo:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+    cliId = ref.id;
+  }else cliNombre = gNomCli(cliId);
+  let campoId = document.getElementById("gt_campo").value, campoNombre = "";
+  if(campoId==="__nuevo"){
+    const n = gg("gt_campoNombre");
+    if(n){
+      const ref = nuevoId(GCOL.campos);
+      await gEscribir(setDoc(ref,{ clienteId:cliId, nombre:n, createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+      campoId = ref.id; campoNombre = n;
+    }else campoId = "";
+  }else if(campoId) campoNombre = (gCampo(campoId)||{}).nombre || "";
+  const d = { clienteId:cliId, campoId, fecha:gg("gt_fecha"), lote:gg("gt_lote"), servicio:gg("gt_serv"), etapa:gg("gt_etapa"),
+    operador:gg("gt_oper"), dosis:gg("gt_dosis"), estado:gg("gt_estado"), ha:normNum(gg("gt_ha")), tarifa:normNum(gg("gt_tarifa")),
+    moneda:gg("gt_mon")||"USD", importe:normNum(gg("gt_imp")), nota:gg("gt_nota"), updatedAt:serverTimestamp() };
+  if(d.estado==="Realizado" && !d.fecha) d.fecha = todayStr();
+  const infSel = (document.getElementById("gt_inf")||{}).value || "";
+  let borrarInf = null;
+  if(infSel && prev && infSel!==prev.informeId){
+    d.informeId = infSel;
+    const ant = prev.informeId ? STORE.informes.find(i=>i.id===prev.informeId) : null;
+    if(ant && !(ant.fotos||[]).length && !ant.enviado && confirm("Vas a quedarte con el informe elegido.\n¿Eliminar el informe anterior de este trabajo (sin fotos)?")) borrarInf = ant.id;
+  }
+  const id = gEditT; closeForm();
+  let tid = id;
+  if(id) await gEscribir(updateDoc(doc(db,GCOL.trabajos,id),d));
+  else{ const ref = nuevoId(GCOL.trabajos); tid = ref.id; await gEscribir(setDoc(ref,{ ...d, createdAt:serverTimestamp() })); }
+  if(d.informeId) await gEscribir(updateDoc(doc(db,"informes",d.informeId),{ trabajoId:tid, updatedAt:serverTimestamp() }));
+  if(borrarInf) await gEscribir(deleteDoc(doc(db,"informes",borrarInf)));
+  const informeId = await gSincronizarInforme(tid, { ...(prev||{}), ...d }, cliNombre, campoNombre);
+  showToast(d.estado==="Realizado" && informeId && !(prev&&prev.informeId) ? "Guardado · informe creado" : (id?"Trabajo actualizado":"Trabajo guardado"));
+}
+
+/* Al estar realizado: crea el informe (una sola vez) y mantiene las hectáreas sincronizadas */
+async function gSincronizarInforme(tid, t, cliNombre, campoNombre){
+  if(t.estado!=="Realizado") return t.informeId || null;
+  const existente = t.informeId ? STORE.informes.find(i=>i.id===t.informeId) : null;
+  if(existente){
+    if(pn(t.ha)>0 && String(existente.supAplicada)!==String(t.ha))
+      await gEscribir(updateDoc(doc(db,"informes",existente.id),{ supAplicada:normNum(t.ha), updatedAt:serverTimestamp() }));
+    return existente.id;
+  }
+  const ref = nuevoId("informes");
+  await gEscribir(setDoc(ref,{
+    fecha:t.fecha||todayStr(), cliente:cliNombre||"", localidad:(gCli(t.clienteId)||{}).localidad||"", campo:campoNombre||"",
+    encargado:t.operador||"", equipo:"", cultivo:"", objetivo:"", supAplicada:pn(t.ha)>0?normNum(t.ha):"",
+    horaInicio:"", horaFin:"", comentario:"", fotos:[], cFirma:"", establec:"", etapa:t.etapa||"", orden:"",
+    dosis:t.dosis||"", operadorAp:t.operador||"", lotes:t.lote?[{ lote:t.lote, has:"" }]:[],
+    enviado:false, enviadoFecha:null, borrador:true, trabajoId:tid,
+    operador:currentOperadorNombre(), createdAt:serverTimestamp(), updatedAt:serverTimestamp()
+  }));
+  await gEscribir(updateDoc(doc(db,GCOL.trabajos,tid),{ informeId:ref.id }));
+  return ref.id;
+}
+async function gMarcarRealizado(id){
+  const t = G.trabajos.find(x=>x.id===id); if(!t) return;
+  const fecha = t.fecha || todayStr();
+  await gEscribir(updateDoc(doc(db,GCOL.trabajos,id),{ estado:"Realizado", fecha, updatedAt:serverTimestamp() }));
+  const informeId = await gSincronizarInforme(id, { ...t, estado:"Realizado", fecha }, gNomCli(t.clienteId), gNomCampo(t));
+  showToast(informeId ? "Realizado · el informe ya está para los operadores" : "Marcado como realizado");
+}
+async function gEliminarTrabajo(id){
+  if(facturaDe(G.trabajos.find(t=>t.id===id)||{id})){ showToast("Está en una factura: sacalo de la factura primero"); return; }
+  if(!confirm("¿Eliminar este trabajo? (Su informe, si existe, no se borra.)")) return;
+  await gEscribir(deleteDoc(doc(db,GCOL.trabajos,id)), "Trabajo eliminado");
+}
+
+
+/* ---------- CARGA INICIAL desde la planilla (una sola vez; no duplica) ---------- */
+const G_SEED = [
+  { cliente:{ nombre:"Dos Ceibos", contacto:"Fabricio Leiva", telefono:"092 387 166", notas:"Plazo de pago 90 días" },
+    campo:"Santa Graciana", moneda:"USD", tarifa:"16", operador:"Facundo Brasesco", etapa:"Barbecho",
+    trabajos:[
+      ["2026-10-12","P5A","53.22","Harrier"],
+      ["2026-10-13","P5A","23.94","Harrier"],
+      ["2026-10-18","P10B + S10","62.78","Harrier"],
+      ["2026-10-19","P3B","9.54","Harrier 20 cc/ha"],
+      ["2026-10-19","P10A","3.36","Harrier"],
+      ["2026-10-19","P10B","4.58","Harrier"],
+      ["2026-10-19","P10B - cabecera entrada","4.5","Harrier"]
+    ],
+    factura:{ fecha:"2026-10-12", vence:"2027-01-12", estado:"pendiente", nota:"Aplicación Santa Graciana" } }
+];
+async function gImportarInicial(){
+  if(!ES_ADMIN) return;
+  if(!confirm("¿Cargar los datos de la planilla? (No se duplica si ya están cargados.)")) return;
+  for(const s of G_SEED){
+    if(G.clientes.some(c=>c.nombre===s.cliente.nombre)) continue;
+    const cref = nuevoId(GCOL.clientes);
+    await gEscribir(setDoc(cref,{ ...s.cliente, activo:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+    const kref = nuevoId(GCOL.campos);
+    await gEscribir(setDoc(kref,{ clienteId:cref.id, nombre:s.campo, createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+    const ids = [];
+    for(const [fecha,lote,ha,dosis] of s.trabajos){
+      const tref = nuevoId(GCOL.trabajos); ids.push(tref.id);
+      await gEscribir(setDoc(tref,{ clienteId:cref.id, campoId:kref.id, fecha, lote, servicio:"Aplicación con drones", etapa:s.etapa,
+        operador:s.operador, dosis, estado:"Realizado", ha, tarifa:s.tarifa, moneda:s.moneda, importe:"", nota:"",
+        createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+    }
+    if(s.factura) await gEscribir(setDoc(nuevoId(GCOL.facturas),{ clienteId:cref.id, trabajoIds:ids, numero:"", moneda:s.moneda,
+      ...s.factura, cobradaFecha:"", totalManual:"", createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+  }
+  showToast("Datos cargados");
+}
+
+
+/* =========================================================
+   INSUMOS: venta de semillas, coadyuvantes y otros productos (no son aplicaciones)
+   ========================================================= */
+const gProd = id => G.insumos.find(p=>p.id===id);
+const gNomProd = v => (gProd(v.productoId)||{}).nombre || v.productoTxt || "Producto";
+const FILTROS_V = [["todas","Todas"],["entregar","Por entregar"],["sinfact","Por facturar"],["pago","Pago pendiente"],["cob","Cobradas"]];
+function gSetFiltroV(f){ G.filtroV = f; renderGestion(); }
+function gStockProd(p){
+  const vend = G.ventas.filter(v=>v.productoId===p.id).reduce((n,v)=>n+pn(v.cantidad),0);
+  const porEntregar = G.ventas.filter(v=>v.productoId===p.id && !v.entregado).reduce((n,v)=>n+pn(v.cantidad),0);
+  return { vend, porEntregar, stock: pn(p.stockInicial)-vend };
+}
+function gPasaFiltroV(v){
+  const f = G.filtroV, ec = estadoCobroV(v);
+  if(f==="entregar") return !v.entregado;
+  if(f==="sinfact") return ec.k==="sin";
+  if(f==="pago") return ec.k==="pend";
+  if(f==="cob") return ec.k==="cob";
+  return true;
+}
+
+/* ---------- Cómo venimos: ganancia de insumos por mes y acumulada ---------- */
+const MESES_G = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","setiembre","octubre","noviembre","diciembre"];
+const gMesTxt = k => { const [a,m] = k.split("-"); return MESES_G[+m-1].charAt(0).toUpperCase()+MESES_G[+m-1].slice(1)+" "+a; };
+function gGananciaHTML(){
+  const vs = G.ventas.filter(v=>v.fecha && (v.moneda||"USD")==="USD");
+  if(!vs.length) return "";
+  const meses = {};
+  vs.forEach(v=>{ const k = v.fecha.slice(0,7); const m = meses[k] = meses[k] || { n:0, monto:0, gan:0, lineas:{} };
+    m.n++; m.monto += importeVenta(v); m.gan += gananciaVenta(v);
+    const l = v.categoria || (gProd(v.productoId)||{}).categoria || "Sin línea"; m.lineas[l] = (m.lineas[l]||0) + gananciaVenta(v); });
+  const keys = Object.keys(meses).sort();
+  const max = Math.max(...keys.map(k=>meses[k].gan), 1);
+  const totG = keys.reduce((n,k)=>n+meses[k].gan,0), totM = keys.reduce((n,k)=>n+meses[k].monto,0);
+  let acum = 0; const filas = keys.map(k=>{ acum += meses[k].gan; return { k, ...meses[k], acum }; });
+  const prom = totG / keys.length;
+  const porLinea = {}; keys.forEach(k=>Object.entries(meses[k].lineas).forEach(([l,g])=>porLinea[l]=(porLinea[l]||0)+g));
+  return `
+    <div class="section-divider" style="margin-top:0;">Cómo venimos · insumos</div>
+    <div class="stats">
+      <div class="stat ok"><div class="n" style="font-size:20px;">${esc(money(totG,"USD"))}</div><div class="l">Ganancia acumulada</div><div class="s">${vs.length} venta${vs.length>1?"s":""} · ${totM>0?(totG/totM*100).toFixed(1).replace(".",","):"0"} % de margen</div></div>
+      <div class="stat"><div class="n" style="font-size:20px;">${esc(money(prom,"USD"))}</div><div class="l">Promedio por mes</div><div class="s">sobre ${keys.length} mes${keys.length>1?"es":""} con ventas</div></div>
+    </div>
+    ${[...filas].reverse().map(f=>`<div class="inf-item">
+      <div class="hi-top"><div><b>${esc(gMesTxt(f.k))}</b><div class="card-sub">${f.n} venta${f.n>1?"s":""} · vendido ${esc(money(f.monto,"USD"))}</div></div>
+        <div style="text-align:right;"><b style="font-size:17px;">${esc(money(f.gan,"USD"))}</b><div class="card-sub">acumulado ${esc(money(f.acum,"USD"))}</div></div></div>
+      <div style="height:8px; border-radius:6px; background:#E6EBF2; margin:8px 0 6px; overflow:hidden;"><div style="height:100%; width:${Math.round(f.gan/max*100)}%; background:var(--green); border-radius:6px;"></div></div>
+      <div class="hi-summary">${Object.entries(f.lineas).sort((a,b)=>b[1]-a[1]).map(([l,g])=>`<span class="pill nc">${esc(l)} ${esc(money(g,"USD"))}</span>`).join("")}</div>
+    </div>`).join("")}
+    ${Object.keys(porLinea).length>1 ? `<div class="hint" style="margin:-2px 0 6px;">Total por línea: ${esc(Object.entries(porLinea).sort((a,b)=>b[1]-a[1]).map(([l,g])=>l+" "+money(g,"USD")).join(" · "))}</div>` : ""}`;
+}
+function gInsumosHTML(){
+  const items = gSorted(G.ventas.filter(gPasaFiltroV), "fecha");
+  const tot = sumMon(items, v=>[v.moneda, importeVenta(v)]), gan = sumMon(items, v=>[v.moneda, gananciaVenta(v)]);
+  const prods = [...G.insumos].sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+  return `
+    <button class="btn btn-primary" style="margin-bottom:8px;" onclick="gFormVenta()">＋ Nueva venta de insumos</button>
+    <button class="btn btn-outline" style="margin-bottom:12px;" onclick="gFormProducto()">＋ Producto</button>
+    ${gGananciaHTML()}
+    <div class="section-divider">Stock</div>
+    ${prods.length ? prods.map(p=>{ const s = gStockProd(p); return `<div class="inf-item">
+      <div class="hi-top"><div><b>${esc(p.nombre)}</b><div class="card-sub">${esc(p.categoria||"")}</div></div>
+        <b style="font-size:18px; color:${s.stock<0?"#B3261E":"inherit"};">${esc(fmtNum(s.stock))} u.</b></div>
+      <div class="hi-summary"><span class="pill nc">Inicial ${esc(fmtNum(p.stockInicial||0))}</span><span class="pill nc">Vendido ${esc(fmtNum(s.vend))}</span>
+        ${s.porEntregar>0?`<span class="pill warn">Por entregar ${esc(fmtNum(s.porEntregar))}</span>`:""}</div>
+      <div class="inf-actions"><button class="btn btn-ghost btn-small" onclick="gFormProducto('${p.id}')">✏️ Editar</button><button class="btn btn-danger btn-small" onclick="gEliminarProducto('${p.id}')">🗑</button></div></div>`; }).join("")
+      : `<div class="hint" style="margin-bottom:8px;">Todavía no cargaste productos. Se crean al vender o con “＋ Producto”.</div>`}
+    <div class="section-divider">Ventas</div>
+    <div class="g-chips">${FILTROS_V.map(([k,l])=>`<button class="${G.filtroV===k?"on":""}" onclick="gSetFiltroV('${k}')">${l}</button>`).join("")}</div>
+    ${items.length ? `<div class="hint" style="margin:-4px 0 10px;">${items.length} venta${items.length===1?"":"s"} · ${esc(monTxt(tot))} · ganancia ${esc(monTxt(gan))}</div>` : ""}
+    ${items.length ? items.map(v=>gVentaCard(v,true)).join("") : `<div class="empty"><b>No hay ventas en esta vista.</b>${G.ventas.length?"Probá con otro filtro.":"Cargá la primera con “＋ Nueva venta de insumos”."}</div>`}`;
+}
+function gVentaCard(v, conCliente){
+  const ec = estadoCobroV(v), f = facturaDeV(v);
+  return `<div class="inf-item">
+    <div class="hi-top">
+      <div><b>${esc(gNomProd(v))} · ${esc(fmtNum(v.cantidad))} u.</b>
+      <div class="card-sub">${esc([conCliente?gNomCli(v.clienteId):"", v.canal, v.categoria].filter(Boolean).join(" · "))}</div></div>
+      <span class="hi-date">${v.fecha?fmtDate(v.fecha):"sin fecha"}</span>
+    </div>
+    <div class="hi-summary">
+      <span class="pill ${v.entregado?"ok":"warn"}">${v.entregado?"✓ Entregado":"Por entregar"}</span>
+      <span class="pill ${ec.cls}">${ec.l}${ec.k==="pend" && f && f.vence ? " · "+fmtDate(f.vence):""}</span>
+      <span class="pill nc">${esc(money(importeVenta(v),v.moneda))}</span>
+      ${gananciaVenta(v)>0?`<span class="pill nc">Ganancia ${esc(money(gananciaVenta(v),v.moneda))}</span>`:""}
+      ${pn(v.plazo)>0?`<span class="pill nc">Crédito ${esc(fmtNum(v.plazo))} días</span>`:""}
+    </div>
+    ${v.nota?`<div class="card-meta">${esc(v.nota)}</div>`:""}
+    <div class="inf-actions">
+      <button class="btn ${v.entregado?"btn-ghost":"btn-primary"} btn-small" onclick="gToggleEntregado('${v.id}')">${v.entregado?"↩ No entregado":"✓ Entregado"}</button>
+      ${ec.k==="sin"?`<button class="btn btn-ghost btn-small" onclick="gFormFactura(null,'${v.clienteId}','${v.id}')">💲 Facturar</button>`:""}
+      <button class="btn btn-ghost btn-small" onclick="gFormVenta('${v.id}')">✏️ Editar</button>
+      <button class="btn btn-danger btn-small" onclick="gEliminarVenta('${v.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+async function gToggleEntregado(id){
+  const v = G.ventas.find(x=>x.id===id); if(!v) return;
+  await gEscribir(updateDoc(doc(db,GCOL.ventas,id),{ entregado:!v.entregado, updatedAt:serverTimestamp() }), v.entregado?"Vuelve a por entregar":"Marcada como entregada");
+}
+async function gEliminarVenta(id){
+  const v = G.ventas.find(x=>x.id===id); if(!v) return;
+  if(facturaDeV(v)){ showToast("Está en una factura: sacala de la factura primero"); return; }
+  if(!confirm("¿Eliminar esta venta?")) return;
+  await gEscribir(deleteDoc(doc(db,GCOL.ventas,id)), "Venta eliminada");
+}
+/* ---- productos ---- */
+let gEditP = null;
+function gFormProducto(id){
+  gEditP = id || null; const p = id ? gProd(id) : null;
+  gForm(`
+    <h1 class="page-title">${p?"Editar producto":"Nuevo producto"}</h1>
+    <label class="field-label" style="margin-top:0;">Nombre</label><input type="text" id="gp_nombre" value="${gv(p,"nombre")}" placeholder="Ej: Harrier">
+    <label class="field-label">Línea / proveedor</label><input type="text" id="gp_cat" value="${gv(p,"categoria")}" placeholder="Ej: AgroSpray, Foliares…">
+    <label class="field-label">Stock inicial (unidades)</label><input type="text" id="gp_stock" inputmode="decimal" value="${gv(p,"stockInicial")}">
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="gGuardarProducto()">Guardar</button>`);
+}
+async function gGuardarProducto(){
+  const nombre = gg("gp_nombre"); if(!nombre){ showToast("Poné el nombre del producto"); return; }
+  const d = { nombre, categoria:gg("gp_cat"), stockInicial:normNum(gg("gp_stock")), updatedAt:serverTimestamp() };
+  const id = gEditP; closeForm();
+  if(id) await gEscribir(updateDoc(doc(db,GCOL.insumos,id),d), "Producto actualizado");
+  else await gEscribir(setDoc(nuevoId(GCOL.insumos),{ ...d, createdAt:serverTimestamp() }), "Producto guardado");
+}
+async function gEliminarProducto(id){
+  if(G.ventas.some(v=>v.productoId===id)){ showToast("Tiene ventas: no se puede eliminar"); return; }
+  if(!confirm("¿Eliminar este producto?")) return;
+  await gEscribir(deleteDoc(doc(db,GCOL.insumos,id)), "Producto eliminado");
+}
+/* ---- ventas ---- */
+let gEditV = null;
+function gSelProd(sel){
+  const items = [...G.insumos].sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+  return gOpts([["", "— Elegí un producto —"], ...items.map(p=>[p.id,p.nombre]), ["__nuevo","➕ Producto nuevo…"]], sel);
+}
+function gFormVenta(id, clienteId){
+  gEditV = id || null; const v = id ? G.ventas.find(x=>x.id===id) : null;
+  const cid = v ? v.clienteId : (clienteId||"");
+  gForm(`
+    <h1 class="page-title">${v?"Editar venta":"Nueva venta de insumos"}</h1>
+    <label class="field-label" style="margin-top:0;">Cliente</label>
+    <select id="gv_cli" onchange="gVentaCli()">${gSelCli(cid)}</select>
+    <div id="gv_cliNuevo" style="display:none; margin-top:6px;"><input type="text" id="gv_cliNombre" placeholder="Nombre del cliente nuevo"></div>
+    <label class="field-label">Producto</label>
+    <select id="gv_prod" onchange="gVentaProd()">${gSelProd(v?v.productoId:"")}</select>
+    <div id="gv_prodNuevo" style="display:none; margin-top:6px;">
+      <input type="text" id="gv_prodNombre" placeholder="Nombre del producto nuevo">
+      <input type="text" id="gv_prodCat" placeholder="Línea / proveedor (opcional)" style="margin-top:6px;">
+      <input type="text" id="gv_prodStock" inputmode="decimal" placeholder="Stock inicial (opcional)" style="margin-top:6px;">
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Fecha</label><input type="date" id="gv_fecha" value="${v?gv(v,"fecha"):todayStr()}"></div>
+      <div><label class="field-label">Canal</label><input type="text" id="gv_canal" value="${v?gv(v,"canal"):"Distribuidor"}"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Cantidad (unid.)</label><input type="text" id="gv_cant" inputmode="decimal" value="${gv(v,"cantidad")}" oninput="gVentaCalc()"></div>
+      <div><label class="field-label">Precio unitario</label><input type="text" id="gv_precio" inputmode="decimal" value="${gv(v,"precio")}" oninput="gVentaCalc()"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Ganancia unitaria</label><input type="text" id="gv_gan" inputmode="decimal" value="${gv(v,"ganancia")}" oninput="gVentaCalc()"></div>
+      <div><label class="field-label">Moneda</label><select id="gv_mon" onchange="gVentaCalc()">${gOpts(["USD","UYU"], v?v.moneda:"USD")}</select></div>
+    </div>
+    <div class="hint" id="gv_calc"></div>
+    <div class="row2">
+      <div><label class="field-label">Días de crédito</label><input type="text" id="gv_plazo" inputmode="numeric" value="${gv(v,"plazo")}"></div>
+      <div><label class="field-label">Entrega</label><select id="gv_ent">${gOpts([["no","Por entregar"],["si","Entregado"]], v&&v.entregado?"si":"no")}</select></div>
+    </div>
+    <label class="field-label">Observaciones</label><textarea id="gv_nota" style="min-height:52px;">${gv(v,"nota")}</textarea>
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="gGuardarVenta()">Guardar</button>`);
+  gVentaCalc();
+}
+function gVentaCli(){ document.getElementById("gv_cliNuevo").style.display = gg("gv_cli")==="__nuevo" ? "block" : "none"; }
+function gVentaProd(){ document.getElementById("gv_prodNuevo").style.display = gg("gv_prod")==="__nuevo" ? "block" : "none"; }
+function gVentaCalc(){
+  const el = document.getElementById("gv_calc"); if(!el) return;
+  const c = pn(normNum(gg("gv_cant"))), p = pn(normNum(gg("gv_precio"))), g = pn(normNum(gg("gv_gan"))), m = gg("gv_mon")||"USD";
+  el.textContent = c>0 && p>0 ? "Monto: "+money(c*p,m)+(g>0?" · Ganancia: "+money(c*g,m):"") : "";
+}
+async function gGuardarVenta(){
+  let cliId = gg("gv_cli"); if(!cliId){ showToast("Elegí un cliente"); return; }
+  let prodId = gg("gv_prod"); if(!prodId){ showToast("Elegí un producto"); return; }
+  if(!(pn(normNum(gg("gv_cant")))>0)){ showToast("Poné la cantidad"); return; }
+  if(cliId==="__nuevo"){
+    const n = gg("gv_cliNombre"); if(!n){ showToast("Escribí el nombre del cliente nuevo"); return; }
+    const ref = nuevoId(GCOL.clientes);
+    await gEscribir(setDoc(ref,{ nombre:n, activo:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp() })); cliId = ref.id;
+  }
+  let cat = "";
+  if(prodId==="__nuevo"){
+    const n = gg("gv_prodNombre"); if(!n){ showToast("Escribí el nombre del producto nuevo"); return; }
+    const ref = nuevoId(GCOL.insumos); cat = gg("gv_prodCat");
+    await gEscribir(setDoc(ref,{ nombre:n, categoria:cat, stockInicial:normNum(gg("gv_prodStock")), createdAt:serverTimestamp(), updatedAt:serverTimestamp() })); prodId = ref.id;
+  }else cat = (gProd(prodId)||{}).categoria || "";
+  const d = { clienteId:cliId, productoId:prodId, categoria:cat, fecha:gg("gv_fecha")||todayStr(), canal:gg("gv_canal"),
+    cantidad:normNum(gg("gv_cant")), precio:normNum(gg("gv_precio")), ganancia:normNum(gg("gv_gan")), moneda:gg("gv_mon")||"USD",
+    plazo:normNum(gg("gv_plazo")), entregado:gg("gv_ent")==="si", nota:gg("gv_nota"), updatedAt:serverTimestamp() };
+  const id = gEditV; closeForm();
+  if(id) await gEscribir(updateDoc(doc(db,GCOL.ventas,id),d), "Venta actualizada");
+  else await gEscribir(setDoc(nuevoId(GCOL.ventas),{ ...d, createdAt:serverTimestamp() }), "Venta guardada");
+}
+/* carga inicial desde la planilla (Insumos) */
+const G_SEED_INS = {
+  productos:[ { nombre:"Harrier", categoria:"AgroSpray", stockInicial:"280" }, { nombre:"Bioestimulante Acadian", categoria:"German Kauffman", stockInicial:"140" } ],
+  ventas:[
+    ["Harrier","Francisco De Palacio","2026-09-09","80","29.9","3.59",true,"120"],
+    ["Bioestimulante Acadian","Don Carlos - Gabriel Brito del Pino","2026-09-11","140","14.5","2.5",false,"120"],
+    ["Harrier","Clamaron- castillo (piñarelli)","2026-09-10","5","29.9","3.59",false,"240"],
+    ["Harrier","Repecho alto","2026-09-21","25","29.9","3.59",true,"120"]
+  ]
+};
+async function gImportarInsumos(){
+  if(!ES_ADMIN) return;
+  if(G.insumos.length || G.ventas.length){ showToast("Ya hay insumos cargados"); return; }
+  if(!confirm("¿Cargar productos, stock y ventas de la planilla?")) return;
+  const pid = {}, cid = {};
+  for(const p of G_SEED_INS.productos){
+    const ref = nuevoId(GCOL.insumos); pid[p.nombre] = ref.id;
+    await gEscribir(setDoc(ref,{ ...p, createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+  }
+  for(const [prod,cli,fecha,cant,precio,gan,ent,plazo] of G_SEED_INS.ventas){
+    let c = G.clientes.find(x=>(x.nombre||"").trim().toLowerCase()===cli.toLowerCase()); let id = c ? c.id : cid[cli];
+    if(!id){ const ref = nuevoId(GCOL.clientes); id = ref.id; cid[cli] = id;
+      await gEscribir(setDoc(ref,{ nombre:cli, activo:true, createdAt:serverTimestamp(), updatedAt:serverTimestamp() })); }
+    const p = G_SEED_INS.productos.find(x=>x.nombre===prod);
+    await gEscribir(setDoc(nuevoId(GCOL.ventas),{ clienteId:id, productoId:pid[prod], categoria:p.categoria, fecha, canal:"Distribuidor",
+      cantidad:cant, precio, ganancia:gan, moneda:"USD", plazo, entregado:ent, nota:"", createdAt:serverTimestamp(), updatedAt:serverTimestamp() }));
+  }
+  showToast("Insumos cargados");
+}
+
+/* ---------- FACTURAS ---------- */
+const FILTROS_F = [["pend","Pago pendiente"],["cob","Cobradas"],["todas","Todas"]];
+function gFacturasHTML(){
+  let items = gSorted(G.facturas, "fecha");
+  if(G.filtroF==="pend") items = items.filter(f=>f.estado!=="cobrada");
+  if(G.filtroF==="cob") items = items.filter(f=>f.estado==="cobrada");
+  const tot = sumMon(items, f=>[f.moneda, factTotal(f)]);
+  return `
+    <button class="btn btn-primary" style="margin-bottom:10px;" onclick="gFormFactura()">＋ Nueva factura</button>
+    <div class="seg-filter">${FILTROS_F.map(([k,l])=>`<button class="${G.filtroF===k?"on":""}" onclick="gSetFiltroF('${k}')">${l}</button>`).join("")}</div>
+    ${items.length ? `<div class="hint" style="margin:-4px 0 10px;">${items.length} factura${items.length===1?"":"s"} · ${esc(monTxt(tot))}</div>` : ""}
+    ${items.length ? items.map(f=>gFacturaCard(f,true)).join("")
+      : `<div class="empty"><b>No hay facturas en esta vista.</b>${G.filtroF==="pend"?"Todo lo facturado está cobrado.":"Armá una con “＋ Nueva factura”: elegís el cliente y los trabajos que entran."}</div>`}`;
+}
+function gFacturaCard(f, conCliente){
+  const ts = factTrabajos(f), vs = factVentas(f), cobrada = f.estado==="cobrada";
+  const venc = !cobrada && f.vence && f.vence < todayStr();
+  return `<div class="inf-item">
+    <div class="hi-top">
+      <div><b>${esc(conCliente ? gNomCli(f.clienteId) : (f.numero ? "Factura "+f.numero : "Factura"))}</b>
+      <div class="card-sub">${esc([conCliente && f.numero ? "Factura "+f.numero : "", "Emitida "+fmtDate(f.fecha)].filter(Boolean).join(" · "))}</div></div>
+      <b style="font-size:15px; white-space:nowrap;">${esc(money(factTotal(f), f.moneda))}</b>
+    </div>
+    <div class="hi-summary">
+      ${cobrada ? `<span class="pill ok">✓ Cobrada ${f.cobradaFecha?fmtDate(f.cobradaFecha):""}</span>`
+                : `<span class="pill ${venc?"bad":"nc"}">${f.vence ? (venc?"Vencida el ":"Se paga el ")+fmtDate(f.vence) : "Pago pendiente · sin fecha"}</span>`}
+      ${ts.length?`<span class="pill nc">${ts.length} trabajo${ts.length===1?"":"s"}</span>`:""}
+      ${vs.length?`<span class="pill nc">${vs.length} venta${vs.length===1?"":"s"} de insumos</span>`:""}
+    </div>
+    ${(ts.length||vs.length) ? `<div class="card-meta">${esc([...ts.map(t=>[gNomCampo(t), t.lote, pn(t.ha)>0?fmtNum(t.ha)+" ha":""].filter(Boolean).join(" ")),
+      ...vs.map(v=>[gNomProd(v), fmtNum(v.cantidad)+" u."].join(" "))].join(" · "))}</div>` : ""}
+    <div class="inf-actions">
+      <button class="btn btn-primary btn-small" onclick="gMarcarCobrada('${f.id}', ${cobrada?"false":"true"})">${cobrada?"↩ Volver a pendiente":"✓ Marcar cobrada"}</button>
+      <button class="btn btn-ghost btn-small" onclick="gFormFactura('${f.id}')">✏️ Editar</button>
+      <button class="btn btn-danger btn-small" onclick="gEliminarFactura('${f.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+let gEditF = null, gFactPre = [];
+function gFormFactura(id, clienteId, trabajoId){
+  gEditF = id || null; const f = id ? G.facturas.find(x=>x.id===id) : null;
+  const cid = f ? f.clienteId : (clienteId||"");
+  gFactPre = f ? [...(f.trabajoIds||[]), ...(f.ventaIds||[])] : (trabajoId ? [trabajoId] : []);
+  gForm(`
+    <h1 class="page-title">${f?"Editar factura":"Nueva factura"}</h1>
+    <label class="field-label" style="margin-top:0;">Cliente</label>
+    <select id="gf_cli" onchange="gFactCliCambia()">${gSelCli(cid,false)}</select>
+    <label class="field-label">Trabajos y ventas incluidos</label>
+    <div id="gf_trabs"></div>
+    <div class="hint" id="gf_tot"></div>
+    <div class="row2">
+      <div><label class="field-label">Nº de factura</label><input type="text" id="gf_num" value="${gv(f,"numero")}"></div>
+      <div><label class="field-label">Fecha de emisión</label><input type="date" id="gf_fecha" value="${f?gv(f,"fecha"):todayStr()}"></div>
+    </div>
+    <div class="row2">
+      <div><label class="field-label">Se paga / vence el</label><input type="date" id="gf_vence" value="${gv(f,"vence")}"></div>
+      <div><label class="field-label">Estado</label><select id="gf_est">${gOpts([["pendiente","Pago pendiente"],["cobrada","Cobrada"]], f?f.estado:"pendiente")}</select></div>
+    </div>
+    <label class="field-label">Total fijo (opcional)</label>
+    <input type="text" id="gf_total" inputmode="decimal" value="${gv(f,"totalManual")}" placeholder="Solo si difiere del total calculado">
+    <label class="field-label">Notas</label><textarea id="gf_nota" style="min-height:52px;">${gv(f,"nota")}</textarea>
+    <button class="btn btn-primary btn-block" style="margin-top:16px;" onclick="gGuardarFactura()">${f?"Guardar cambios":"Guardar factura"}</button>`);
+  gFactCliCambia();
+}
+function gFactCliCambia(){
+  const cid = gg("gf_cli"), box = document.getElementById("gf_trabs");
+  if(!cid){ box.innerHTML = `<div class="hint">Elegí un cliente para ver sus trabajos realizados sin facturar.</div>`; gFactCalc(); return; }
+  const libres = gSorted(G.trabajos.filter(t=>t.clienteId===cid && t.estado==="Realizado" &&
+    (!facturaDe(t) || (gEditF && facturaDe(t).id===gEditF))), "fecha");
+  const ventasLibres = gSorted(G.ventas.filter(v=>v.clienteId===cid && (!facturaDeV(v) || (gEditF && facturaDeV(v).id===gEditF))), "fecha");
+  const htmlV = ventasLibres.map(v=>`
+    <label class="g-chk"><input type="checkbox" class="gf_v" value="${v.id}" ${gFactPre.includes(v.id)?"checked":""} onchange="gFactCalc()">
+      <span><b>🌱 ${esc(gNomProd(v))}</b> · ${v.fecha?fmtDate(v.fecha):"sin fecha"}<br>
+      <small>${esc(fmtNum(v.cantidad))} u. × ${esc(money(v.precio,v.moneda))} = ${esc(money(importeVenta(v),v.moneda))}</small></span></label>`).join("");
+  const htmlT = libres.map(t=>`
+    <label class="g-chk"><input type="checkbox" class="gf_t" value="${t.id}" ${gFactPre.includes(t.id)?"checked":""} onchange="gFactCalc()">
+      <span><b>${esc(gNomCampo(t)||"Sin campo")}</b>${t.lote?" · Lote "+esc(t.lote):""} · ${t.fecha?fmtDate(t.fecha):"sin fecha"}<br>
+      <small>${pn(t.ha)>0?esc(fmtNum(t.ha))+" ha":"sin hectáreas"}${pn(t.tarifa)>0?" × "+esc(money(t.tarifa,t.moneda)):""} = ${esc(money(importeTrabajo(t),t.moneda))}</small></span></label>`).join("");
+  box.innerHTML = (libres.length || ventasLibres.length) ? htmlT + htmlV : `<div class="hint">Este cliente no tiene trabajos realizados ni ventas sin facturar.</div>`;
+  gFactCalc();
+}
+function gFactSel(){ return [...document.querySelectorAll(".gf_t:checked")].map(x=>G.trabajos.find(t=>t.id===x.value)).filter(Boolean); }
+function gFactSelV(){ return [...document.querySelectorAll(".gf_v:checked")].map(x=>G.ventas.find(v=>v.id===x.value)).filter(Boolean); }
+function gFactCalc(){
+  const ts = gFactSel(), vs = gFactSelV(), el = document.getElementById("gf_tot"); if(!el) return;
+  if(!ts.length && !vs.length){ el.textContent = "Tildá los trabajos y ventas que entran en esta factura."; return; }
+  el.textContent = [ts.length?ts.length+" trabajo"+(ts.length>1?"s":""):"", vs.length?vs.length+" venta"+(vs.length>1?"s":""):""].filter(Boolean).join(" + ")
+    +" · Total calculado: "+monTxt(sumMon([...ts.map(t=>[t.moneda,importeTrabajo(t)]),...vs.map(v=>[v.moneda,importeVenta(v)])],x=>x));
+}
+async function gGuardarFactura(){
+  const clienteId = gg("gf_cli"); if(!clienteId){ showToast("Elegí un cliente"); return; }
+  const ts = gFactSel(), vs = gFactSelV(); if(!ts.length && !vs.length){ showToast("Elegí al menos un trabajo o venta"); return; }
+  const monedas = [...new Set([...ts.map(t=>t.moneda||"USD"), ...vs.map(v=>v.moneda||"USD")])];
+  if(monedas.length>1){ showToast("Hay distinta moneda: facturalos por separado"); return; }
+  const totalManual = normNum(gg("gf_total"));
+  if(!(pn(totalManual)>0) && ts.reduce((n,t)=>n+importeTrabajo(t),0)+vs.reduce((n,v)=>n+importeVenta(v),0)<=0 && !confirm("Esta factura tiene total $0 (faltan hectáreas o tarifa). ¿Guardar igual?")) return;
+  const prev = gEditF ? G.facturas.find(x=>x.id===gEditF) : null, estado = gg("gf_est");
+  let vence = gg("gf_vence");
+  if(!vence){ const fs = vs.filter(v=>v.fecha && pn(v.plazo)>0).map(v=>{ const x=new Date(v.fecha+"T12:00:00"); x.setDate(x.getDate()+Math.round(pn(v.plazo))); return x.toISOString().slice(0,10); }).sort(); if(fs.length) vence = fs[0]; }
+  const d = { clienteId, trabajoIds:ts.map(t=>t.id), ventaIds:vs.map(v=>v.id), numero:gg("gf_num"), moneda:monedas[0], fecha:gg("gf_fecha")||todayStr(), vence,
+    estado, cobradaFecha: estado==="cobrada" ? ((prev&&prev.cobradaFecha)||todayStr()) : "", totalManual, nota:gg("gf_nota"), updatedAt:serverTimestamp() };
+  const id = gEditF; closeForm();
+  if(id) await gEscribir(updateDoc(doc(db,GCOL.facturas,id),d), "Factura actualizada");
+  else await gEscribir(setDoc(nuevoId(GCOL.facturas),{ ...d, createdAt:serverTimestamp() }), "Factura guardada");
+}
+async function gMarcarCobrada(id, valor){
+  await gEscribir(updateDoc(doc(db,GCOL.facturas,id),{ estado:valor?"cobrada":"pendiente", cobradaFecha:valor?todayStr():"", updatedAt:serverTimestamp() }),
+    valor ? "Marcada como cobrada" : "Vuelve a pendiente de pago");
+}
+async function gEliminarFactura(id){
+  if(!confirm("¿Eliminar esta factura? Sus trabajos y ventas vuelven a “Por facturar”.")) return;
+  await gEscribir(deleteDoc(doc(db,GCOL.facturas,id)), "Factura eliminada");
+}
+
+renderInicio();
+
+/* ---------- exponer funciones usadas por atributos onclick/onchange del HTML ----------
+   (necesario porque el script es un módulo ES: sus declaraciones no son globales) */
+Object.assign(window, { gImportarInicial, gImportarInsumos, gSetFiltroV, gFormProducto, gGuardarProducto, gEliminarProducto, gFormVenta, gVentaCli, gVentaProd, gVentaCalc, gGuardarVenta, gToggleEntregado, gEliminarVenta,
+  showView, openForm, closeForm, setEstado, saveChecklist, openDetail,
+  setMesInf, gVista, gIr, gSetFiltroT, gSetFiltroF, gAbrirCliente, gBuscar, gFormCliente, gGuardarCliente, gEliminarCliente,
+  gFormCampo, gGuardarCampo, gEliminarCampo, gFormTrabajo, gTrabCliCambia, gTrabCampoCambia, gTrabCalc, gGuardarTrabajo,
+  gMarcarRealizado, gEliminarTrabajo, gAbrirInforme, gFormFactura, gFactCliCambia, gFactCalc, gGuardarFactura, gMarcarCobrada, gEliminarFactura,
+  openReporte, guardarReporte, addLote, rmLote, sumarLotes, agregarFotos, quitarFoto, verFoto, verFotoForm, cerrarLightbox, resolverReporte, eliminarReporte,
+  setFiltroInf, openInforme, guardarInforme, marcarEnviado, eliminarInforme, pdfInforme,
+  yaVerifique, reenviarVerificacion,
+  openOperadores, guardarOperador, quitarOperador,
+  setListaSalida, tocarItem, procesoItem, reiniciarLista,
+  mostrarTab, hacerLogin, hacerRegistro, cerrarSesion
+});
+</script>
+</body>
+</html>
